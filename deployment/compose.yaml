@@ -29,6 +29,7 @@ services:
     depends_on: [web]
     volumes:
       - ../runtime/events:/events:rw
+      - ../runtime/bots:/botdata:rw
       - ${GAME_INSTALLATION:?Set the absolute owned Half-Life installation directory}:/juego:ro
       - ../config:/config:ro
       - ../custom/cstrike:/mapas:ro

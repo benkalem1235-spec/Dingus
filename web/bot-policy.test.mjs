@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {mapPopulation,populationTarget} from './bot-policy.mjs';
+test('all maps get bounded bot populations, variation preserves a join slot',()=>{assert.equal(Object.keys(mapPopulation).length,11);for(const map of Object.keys(mapPopulation)){const targets=[0,1,2].map(p=>populationTarget(map,12,p));assert.ok(targets.every(n=>n>=2&&n<12));assert.equal(new Set(targets).size,3);}assert.equal(populationTarget('de_dust2',4,2),3);});

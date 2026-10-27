@@ -88,6 +88,10 @@ fi
 # la configuración, los bots y los mapas de la comunidad son propios de cada sala.
 preparar_sala() { # preparar_sala <dir> <nombre> <bots> <dificultad>
   dir=$1
+  mkdir -p "/botdata/$(basename "$dir")/graph" "/botdata/$(basename "$dir")/train"
+  mkdir -p "$dir/cstrike/addons/yapb/data"
+  ln -sfn "/botdata/$(basename "$dir")/graph" "$dir/cstrike/addons/yapb/data/graph"
+  ln -sfn "/botdata/$(basename "$dir")/train" "$dir/cstrike/addons/yapb/data/train"
   mkdir -p "$dir/cstrike/addons/yapb/conf" "$dir/cstrike/addons/metamod" "$dir/cstrike/addons/events" "$dir/valve"
   ln -sf /opt/xash/addons/metamod/metamod.so "$dir/cstrike/addons/metamod/metamod.so"
   ln -sf /opt/xash/addons/events/dingus_events.so "$dir/cstrike/addons/events/dingus_events.so"
@@ -123,6 +127,25 @@ preparar_sala() { # preparar_sala <dir> <nombre> <bots> <dificultad>
         -e "s/^yb_difficulty \".*\"/yb_difficulty \"$4\"/" \
         "$dir/yapb.cfg" > "$dir/cstrike/addons/yapb/conf/yapb.cfg"
   fi
+  # Authoritative overrides: do not let the packaged bot config re-enable chat.
+  cat >> "$dir/cstrike/addons/yapb/conf/yapb.cfg" <<BOTCFG
+yb_quota "$3"
+yb_difficulty "$4"
+yb_quota_mode "fill"
+yb_join_after_player "0"
+yb_join_delay "1"
+yb_autovacate "1"
+yb_autovacate_keep_slots "1"
+yb_kick_after_player_connect "1"
+yb_chat "0"
+yb_chat_percent "0"
+yb_radio_mode "0"
+yb_language "en"
+yb_graph_auto_collect_db "0"
+yb_graph_analyze_auto_start "1"
+yb_graph_analyze_auto_save "1"
+yb_graph_analyze_slice_ms "2.0"
+BOTCFG
 }
 
 correr_sala() { # correr_sala <id> <mapa> <jugadores> <puerto>  (en la carpeta de la sala)

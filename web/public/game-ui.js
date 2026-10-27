@@ -1,5 +1,6 @@
 import {setupRecording,setupDirector} from '/record.js';
 import {setupBuy} from '/buy.js';
+import {setupMouseCapture} from '/mouse.js';
 import {entrarAlEquipo} from '/team.js';
 const params=new URLSearchParams(location.search);const share=document.getElementById('share-room');
 share.onclick=async()=>{const url=new URL('/play',window.CS16_SHARE_ORIGIN||location.href);url.searchParams.set('room',params.get('room'));try{await navigator.clipboard.writeText(url.href);share.textContent='Copied ✓';}catch{window.prompt('Copy this room link:',url.href);}setTimeout(()=>share.textContent='Copy room invite ↗',2500);};
@@ -10,7 +11,7 @@ document.addEventListener('pointerlockchange',()=>document.body.classList.toggle
 document.getElementById('form').addEventListener('submit',()=>{entrarAlEquipo(document.getElementById('team').value).then(joined=>{if(joined)document.dispatchEvent(new Event('cs16-team-joined'));}).catch(console.error);});
 window.addEventListener('beforeunload',()=>{try{window.xash?.disconnectTransport();}catch{}});
 
-setupBuy();
+setupBuy();setupMouseCapture();
 
 const eventButton=document.createElement('button');eventButton.id='event-vote';eventButton.textContent='Vote: headcrab wave';document.getElementById('room-tools').prepend(eventButton);
 eventButton.onclick=async()=>{

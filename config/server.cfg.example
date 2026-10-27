@@ -44,7 +44,7 @@ mp_roundrespawn_time 20
 
 // Bots YaPB (la cantidad y la dificultad salen de .env: BOTS y BOTS_DIFICULTAD)
 yb_join_after_player 0
-yb_quota_mode "normal"
+yb_quota_mode "fill"
 
 exec listip.cfg
 exec banned.cfg
@@ -54,3 +54,10 @@ sv_public 0
 
 yb_chat 0
 rcon_password "GENERATE_ON_SETUP"
+
+yb_chat 0
+yb_chat_percent 0
+yb_radio_mode 0
+yb_autovacate 1
+yb_autovacate_keep_slots 1
+yb_kick_after_player_connect 1

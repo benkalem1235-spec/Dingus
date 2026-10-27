@@ -57,3 +57,8 @@ Play from the video landing page to enter the game hub. Host an invite room, cho
 ## Account entry flow
 
 The entry page contains only name/password sign-in or registration over the gameplay video. Email signup is disabled. Signed-in players skip directly to the compact hub; maps, hosting and crates are shown only after sign-in. The stable launcher opens the game host directly so saved first-party login sessions are recognized.
+
+
+## Bots, menu tabs and migration
+
+Servers and Crates are now adjacent menu tabs. Bots populate all maps, with a map-specific total-player target that varies slightly every three minutes; YaPB fill mode removes bots as humans join. Chat and radio chatter are disabled. Navigation data persists in `runtime/bots`. Use the private transfer tools in `deployment/README.md` to move game assets and player records off the PC. Only source and deployment scripts belong in public Git.
