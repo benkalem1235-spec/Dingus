@@ -11,7 +11,7 @@ Email signup is disabled until the host is configured. Create a private `config/
 ```
 EMAIL_API_KEY=<Resend API key>
 EMAIL_FROM=Dingus <verified-sender@your-domain.example>
-ACCOUNT_PUBLIC_URL=https://lion-appropriate-style-badly.trycloudflare.com
+ACCOUNT_PUBLIC_URL=https://worth-satisfied-combinations-those.trycloudflare.com
 ```
 
 Use the direct HTTPS game host as ACCOUNT_PUBLIC_URL, not the static launcher. Resend requires a verified sender domain. Restart the host after configuration. Do not commit this file. Email accounts cannot log in until verified; signup without email works immediately. The game host must remain running for verification links to work. The tunnel hostname can change if the tunnel is recreated.

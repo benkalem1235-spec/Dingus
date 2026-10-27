@@ -1,6 +1,6 @@
 # Skin and crate mod research
 
-Checked 27 October 2026. Research only: no mod installed or purchased.
+Research checked 27 October 2026. This research preceded the implementation. A focused CSGOMod adaptation is now implemented; see [ECONOMY.md](ECONOMY.md).
 
 | Candidate | What it provides | Requirements and fit |
 | --- | --- | --- |

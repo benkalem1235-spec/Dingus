@@ -79,8 +79,9 @@ static void cameraCommand(edict_t *e){
  e->v.iuser1=3;e->v.iuser2=0;e->v.iuser3=0;e->v.movetype=MOVETYPE_NOCLIP;e->v.solid=SOLID_NOT;e->v.velocity=Vector(0,0,0);e->v.view_ofs=Vector(0,0,0);e->v.angles=angle;e->v.v_angle=angle;e->v.fixangle=1;g_engfuncs.pfnSetOrigin(e,origin);g_engfuncs.pfnSetView(e,e);cameras.push_back({e,e->serialnumber,origin,gpGlobals->time+600});
  RETURN_META(MRES_SUPERCEDE);
 }
-static void gameInit(){g_engfuncs.pfnAddServerCommand((char*)"dingus_headcrabs",spawnWave);g_engfuncs.pfnAddServerCommand((char*)"dingus_arena_status",arenaStatus);RETURN_META(MRES_IGNORED);}
-static int spawn(edict_t *e){if(!strcmp(STRING(e->v.classname),"worldspawn")){g_engfuncs.pfnPrecacheModel((char*)"models/w_shotgun.mdl");g_engfuncs.pfnPrecacheModel((char*)"models/w_9mmar.mdl");crabs.clear();cameras.clear();ready=false;lastFrame=nextWave=0;g_engfuncs.pfnPrecacheModel((char*)model);g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_attack1.wav");g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_idle1.wav");ready=true;}RETURN_META_VALUE(MRES_IGNORED,0);}
+#include "economy.hpp"
+static void gameInit(){g_engfuncs.pfnAddServerCommand((char*)"dingus_equip",econEquip);g_engfuncs.pfnAddServerCommand((char*)"dingus_economy_status",econStatus);g_engfuncs.pfnAddServerCommand((char*)"dingus_headcrabs",spawnWave);g_engfuncs.pfnAddServerCommand((char*)"dingus_arena_status",arenaStatus);RETURN_META(MRES_IGNORED);}
+static int spawn(edict_t *e){if(!strcmp(STRING(e->v.classname),"worldspawn")){econReset();g_engfuncs.pfnPrecacheModel((char*)"models/w_shotgun.mdl");g_engfuncs.pfnPrecacheModel((char*)"models/w_9mmar.mdl");crabs.clear();cameras.clear();ready=false;lastFrame=nextWave=0;g_engfuncs.pfnPrecacheModel((char*)model);g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_attack1.wav");g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_idle1.wav");ready=true;}RETURN_META_VALUE(MRES_IGNORED,0);}
 static void frame(){
  for(auto i=cameras.begin();i!=cameras.end();){auto e=i->entity;if(!valid(e)||e->serialnumber!=i->serial||!e->v.iuser1||gpGlobals->time>i->until){i=cameras.erase(i);continue;}e->v.iuser1=3;e->v.iuser2=0;e->v.velocity=Vector(0,0,0);g_engfuncs.pfnSetOrigin(e,i->origin);++i;}
  float now=gpGlobals->time;if(now-lastFrame<0.1f)RETURN_META(MRES_IGNORED);lastFrame=now;
@@ -106,9 +107,9 @@ static int spawnPost(edict_t *e){
  }
  RETURN_META_VALUE(MRES_IGNORED,0);
 }
-static int getApiPost(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnSpawn=spawnPost;return 1;}
-static int getApi(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnGameInit=gameInit;table->pfnSpawn=spawn;table->pfnStartFrame=frame;table->pfnClientCommand=cameraCommand;return 1;}
+static int getApiPost(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnSpawn=spawnPost;table->pfnPlayerPostThink=econPostThink;return 1;}
+static int getApi(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnGameInit=gameInit;table->pfnSpawn=spawn;table->pfnStartFrame=frame;table->pfnClientCommand=cameraCommand;table->pfnClientConnect=econConnect;table->pfnClientDisconnect=econDisconnect;return 1;}
 C_DLLEXPORT void WINAPI GiveFnptrsToDll(enginefuncs_t *functions,globalvars_t *globals){memcpy(&g_engfuncs,functions,sizeof(g_engfuncs));gpGlobals=globals;}
 C_DLLEXPORT int Meta_Query(char*,plugin_info_t **info,mutil_funcs_t *util){*info=&Plugin_info;gpMetaUtilFuncs=util;return 1;}
-C_DLLEXPORT int Meta_Attach(PLUG_LOADTIME,META_FUNCTIONS *functions,meta_globals_t *globals,gamedll_funcs_t *game){gpMetaGlobals=globals;gpGamedllFuncs=game;memset(functions,0,sizeof(*functions));functions->pfnGetEntityAPI2=getApi;functions->pfnGetEntityAPI2_Post=getApiPost;return 1;}
+C_DLLEXPORT int Meta_Attach(PLUG_LOADTIME,META_FUNCTIONS *functions,meta_globals_t *globals,gamedll_funcs_t *game){gpMetaGlobals=globals;gpGamedllFuncs=game;memset(functions,0,sizeof(*functions));functions->pfnGetEntityAPI2=getApi;functions->pfnGetEntityAPI2_Post=getApiPost;functions->pfnGetEngineFunctions=econEngineApi;return 1;}
 C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME,PL_UNLOAD_REASON){return 0;}

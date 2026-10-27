@@ -4,7 +4,7 @@ let copying; let shareOrigin=location.origin;
 async function copy(text){try{await navigator.clipboard.writeText(text);notice('Invite link copied.');}catch{const el=document.createElement('textarea');el.value=text;document.body.append(el);el.select();const ok=document.execCommand('copy');el.remove();if(ok)notice('Invite link copied.');else{window.prompt('Copy this invite link:',text);}}}
 function notice(text){$('notice').textContent=text;$('notice').style.display='block';clearTimeout(copying);copying=setTimeout(()=>$('notice').style.display='none',3500);}
 function openCreate(){ $('create-form').hidden=false;$('created').hidden=true;$('create-error').textContent='';dialog.showModal();}
-for(const id of ['invite','invite-top','invite-bottom'])$(id).onclick=openCreate;
+for(const id of ['invite','invite-top','invite-bottom']){const b=$(id);if(b)b.onclick=openCreate;}
 $('close').onclick=()=>dialog.close();$('done').onclick=()=>dialog.close();
 dialog.onclick=e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}};
 async function refresh(){try{const r=await fetch('/api/rooms',{cache:'no-store'});if(!r.ok)throw Error();const data=await r.json();shareOrigin=data.shareOrigin||location.origin;if(data.maps){const chosen=$('map').value;$('map').replaceChildren();for(const m of data.maps){const o=document.createElement('option');o.value=m.id;o.textContent=m.name;$('map').append(o);}if(data.maps.some(m=>m.id===chosen))$('map').value=chosen;}const target=$('rooms');target.replaceChildren();let online=0;

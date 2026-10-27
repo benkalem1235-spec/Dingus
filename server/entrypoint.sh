@@ -137,7 +137,7 @@ correr_sala() { # correr_sala <id> <mapa> <jugadores> <puerto>  (en la carpeta d
     shift 4
     inicio=$(date +%s)
     set +e
-    XASH3D_BASEDIR="$PWD" /opt/xash/xash3d -dedicated -game cstrike "$@" -rodir /juego -port "$puerto" -noip6 -dev 1 \
+    DINGUS_ROOM_PORT="$puerto" XASH3D_BASEDIR="$PWD" /opt/xash/xash3d -dedicated -game cstrike "$@" -rodir /juego -port "$puerto" -noip6 -dev 1 \
       +ip 127.0.0.1 +sv_lan 1 +maxplayers "$max" +map "$mapa" < /dev/null
     codigo=$?
     set -e

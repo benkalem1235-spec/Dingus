@@ -1,6 +1,7 @@
 services:
   web:
     build: ../web
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     restart: unless-stopped
     ports:
       - "127.0.0.1:27016:27016"
@@ -12,7 +13,8 @@ services:
       ACCOUNT_PUBLIC_URL: ${ACCOUNT_PUBLIC_URL:-}
       PUBLIC_URL: ${PUBLIC_URL:?Set the public HTTPS game-server origin}
     volumes:
-      - account_data:/accounts:rw
+      - ../accounts:/accounts:rw
+      - ../runtime/events:/events:ro
       - ../data:/data:ro
       - ../config:/config:ro
     read_only: true
@@ -26,6 +28,7 @@ services:
     network_mode: "service:web"
     depends_on: [web]
     volumes:
+      - ../runtime/events:/events:rw
       - ${GAME_INSTALLATION:?Set the absolute owned Half-Life installation directory}:/juego:ro
       - ../config:/config:ro
       - ../custom/cstrike:/mapas:ro
@@ -44,6 +47,5 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 volumes:
-  account_data:
   caddy_data:
   caddy_config:

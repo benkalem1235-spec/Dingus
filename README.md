@@ -47,3 +47,8 @@ The front page uses a roughly 26-second edit of the owner's Dust II recording, i
 ## Accounts
 
 Optional username/password signup and sign-in: `/account.html`. Email signup remains disabled pending mail setup. See [ACCOUNTS.md](ACCOUNTS.md) for persistence and mail configuration. Guest access remains available.
+
+
+## Armory and game hub
+
+Play from the video landing page to enter the game hub. Host an invite room, choose any supported map, or sign in to earn cosmetic credits from kills and rounds. Crates, equip selections and sell-back are available in the Armory. Read [ECONOMY.md](ECONOMY.md) for rewards, odds, local model generation and persistence. For Docker Compose, create `accounts` owned by HOST_UID/HOST_GID (default 1000), and `runtime/events` writable by engine uid 10001 before launch (the local start script handles both). Generate the local skin pack before launch.

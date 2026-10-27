@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && r
 ARG METAMOD_REV=6bfb29405219f1325134a5e44feffb9580ff3b5f
 WORKDIR /build
 RUN git init headers && cd headers && git remote add origin https://github.com/FWGS/metamod-fwgs.git && git fetch --depth 1 origin "$METAMOD_REV" && git checkout FETCH_HEAD
-COPY events/headcrabs.cpp ./
+COPY events/headcrabs.cpp events/economy.hpp ./
 RUN g++ -m32 -shared -fPIC -std=c++17 -D_LINUX -DLINUX -DPOSIX -Iheaders/metamod/include/engine -Iheaders/metamod/include/common -Iheaders/metamod/include/dlls -Iheaders/metamod/include/pm_shared -Iheaders/metamod/include/public -Iheaders/metamod/src headcrabs.cpp -o dingus_events.so
 ARG METAMOD_SHA256=797d53cdced518e3ecd517012ce58e5a971e45e31203eefcaaedca4769bff389
 RUN curl -fsSL https://github.com/FWGS/metamod-fwgs/releases/download/continuous/metamod-fwgs_linux_x86.zip -o metamod.zip && echo "$METAMOD_SHA256  metamod.zip" | sha256sum -c - && unzip -q metamod.zip -d package

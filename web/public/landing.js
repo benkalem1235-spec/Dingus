@@ -1,0 +1,1 @@
+const video=document.getElementById('hero-video');if(video){video.muted=true;const motion=matchMedia('(prefers-reduced-motion: reduce)');const update=()=>{if(document.hidden||motion.matches)video.pause();else video.play().catch(()=>{});};document.addEventListener('visibilitychange',update);motion.addEventListener('change',update);update();}

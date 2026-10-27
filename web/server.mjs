@@ -1,7 +1,10 @@
 // Same-origin game host with optional accounts. Engine UDP ports stay inside the container network.
 import http from 'node:http';
 import {createAuth} from './auth.mjs';
+import {Economy} from './economy.mjs';
+import {watchEconomy} from './economy-events.mjs';
 const auth=createAuth();
+const economy=new Economy();
 import fs from 'node:fs';
 import path from 'node:path';
 import { WebSocketServer } from 'ws';
@@ -22,11 +25,16 @@ function shareOrigin(req){
 const cfg={httpPort:27016,webrtcPort:27018,publicIp:process.env.PUBLIC_IP||'',maxPeers:90,maxPorIp:16};
 const bridge=new RtcBridge(cfg);
 const sockets=new SocketBridge();
+const economyEvents=watchEconomy(economy,rooms,sockets.peers);
+const cosmeticPack=JSON.parse(fs.readFileSync("/data/skins.json"));
+let syncingEquipment=false;
+async function syncEquipment(){if(syncingEquipment||!adminPassword)return;syncingEquipment=true;try{for(const p of sockets.peers){if(!p.open||!p.address)continue;const user=p.identity?.();const variants=user?economy.selection(user.id):[0,0,0,0];const room=rooms.find(r=>r.id===p.room);if(room)await rcon(room.puerto,adminPassword,"dingus_equip "+p.address+" "+variants.join(" "));}}finally{syncingEquipment=false;}}
+setInterval(()=>syncEquipment().catch(()=>{}),3000).unref();
 const count=id=>bridge.contarSala(id)+sockets.contarSala(id);
 const lookup=token=>rooms.find(r=>r.token===token);
 async function update(){await Promise.all(rooms.map(async r=>states.set(r.id,await consultarInfo(r.puerto))));}
 await update();setInterval(update,5000).unref();
-const mime={'.mp4':'video/mp4','.webm':'video/webm','.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.wasm':'application/wasm','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.zip':'application/zip'};
+const mime={'.mp4':'video/mp4','.webm':'video/webm','.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript','.wasm':'application/wasm','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.zip':'application/zip'};
 const headers={'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Opener-Policy':'same-origin','Cross-Origin-Resource-Policy':'same-origin'};
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':mime['.json'],'Cache-Control':'no-store',...headers});res.end(JSON.stringify(data));};
 function file(req,res,file){let stat;try{stat=fs.statSync(file);if(!stat.isFile())throw Error();}catch{return json(res,404,{error:'Not found'});}
@@ -45,6 +53,14 @@ const server=http.createServer(async(req,res)=>{
  try{
  const u=new URL(req.url,'http://local');let p;try{p=decodeURIComponent(u.pathname);}catch{return json(res,400,{error:'Invalid URL'});}
  if(await auth(req,res,p,u))return;
+ if(p.startsWith('/api/shop')){
+  const user=auth.user(req);if(!user)return json(res,401,{error:'Sign in to earn credits and use your inventory.'});
+  if(req.method==='GET'&&p==='/api/shop')return json(res,200,{username:user.username,...economy.snapshot(user.id)});
+  if(req.method!=='POST')return json(res,405,{error:'Method not allowed'});
+  if(![`http://${req.headers.host}`,`https://${req.headers.host}`].includes(req.headers.origin)||!String(req.headers['content-type']).startsWith('application/json'))return json(res,403,{error:'Request origin rejected'});
+  let text='';for await(const chunk of req){text+=chunk;if(Buffer.byteLength(text)>4096)return json(res,413,{error:'Request too large'});}
+  try{const body=JSON.parse(text);const result=economy.transaction(user.id,p.slice('/api/shop/'.length),body);syncEquipment().catch(()=>{});return json(res,200,{...result,...economy.snapshot(user.id)});}catch(e){return json(res,400,{error:e.message});}
+ }
  if(req.method==='POST'&&p==='/api/event'){
   if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return json(res,403,{error:'Origin rejected'});
   const r=lookup(u.searchParams.get('sala')),session=req.headers['x-game-session'];
@@ -92,8 +108,9 @@ const server=http.createServer(async(req,res)=>{
  if(p==='/api/room'){const r=lookup(u.searchParams.get('room'));return r?json(res,200,detail(r)):json(res,404,{error:'Room link is invalid or expired.'});}
  if(p==='/api/status'){
   const r=lookup(u.searchParams.get('sala'));if(!r)return json(res,404,{error:'Invalid room'});
-  return json(res,200,{hostname:r.nombre,map:states.get(r.id)?.map||r.mapa,maxPlayers:r.maxJugadores,webPlayers:count(r.id),needsPassword:false,serverOnline:!!states.get(r.id),assets,sala:r.token});
+  return json(res,200,{hostname:r.nombre,map:states.get(r.id)?.map||r.mapa,maxPlayers:r.maxJugadores,webPlayers:count(r.id),needsPassword:false,serverOnline:!!states.get(r.id),assets,cosmetics:cosmeticPack,sala:r.token});
  }
+ if(p==='/game/skins.zip')return file(req,res,'/data/skins.zip');
  if(p==='/game/valve.zip')return file(req,res,'/data/valve.zip');
  if(p==='/play'){
   const r=lookup(u.searchParams.get('room'));if(!r)return json(res,404,{error:'Room link is invalid or expired. Return to the lobby.'});
@@ -109,6 +126,6 @@ server.on('upgrade',(req,socket,head)=>{try{const u=new URL(req.url,'http://loca
  if(!['/signal','/game-socket'].includes(u.pathname)||!r||!states.get(r.id)||count(r.id)>=r.maxJugadores)return socket.destroy();
  if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return socket.destroy();
  const ip=req.headers['cf-connecting-ip']||req.socket.remoteAddress;
- ws.handleUpgrade(req,socket,head,w=>u.pathname==='/game-socket'?sockets.handle(w,ip,r):bridge.handle(w,ip,r));}catch{socket.destroy();}});
+ ws.handleUpgrade(req,socket,head,w=>u.pathname==='/game-socket'?sockets.handle(w,ip,r,()=>auth.user(req)):bridge.handle(w,ip,r));}catch{socket.destroy();}});
 server.listen(27016,'0.0.0.0',()=>console.log('CS 1.6 webgame ready on :27016; game servers are internal.'));
-for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{sockets.closeAll();bridge.closeAll();server.close();setTimeout(()=>process.exit(0),300).unref();});
+for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{economyEvents.close();sockets.closeAll();bridge.closeAll();server.close();setTimeout(()=>process.exit(0),300).unref();});

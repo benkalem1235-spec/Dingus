@@ -21,7 +21,7 @@ export function createAuth({directory='/accounts',env=process.env,sendEmail,now=
  const reply=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data));};
  const rates=new Map();let busy=0;
  const read=async req=>{let text='';for await(const chunk of req){text+=chunk;if(Buffer.byteLength(text)>4096)throw Error('Request too large');}try{return JSON.parse(text);}catch{throw Error('Invalid request');}};
- return async(req,res,p,u)=>{
+ const handler=async(req,res,p,u)=>{
   if(!p.startsWith('/api/auth/'))return false;
   if(p==='/api/auth/me'&&req.method==='GET'){reply(res,200,{user:session(req)?publicUser(session(req)):null,emailAvailable:mailReady});return true;}
   if(p==='/api/auth/verify'&&req.method==='GET'){
@@ -71,4 +71,6 @@ export function createAuth({directory='/accounts',env=process.env,sendEmail,now=
   }catch(e){reply(res,400,{error:e.message==='Email delivery failed'?'Could not send verification email. Please try again later.':e.message});}finally{busy--;}
   return true;
  };
+ handler.user=req=>{const u=session(req);return u?{id:u.id,username:u.username}:null;};
+ return handler;
 }

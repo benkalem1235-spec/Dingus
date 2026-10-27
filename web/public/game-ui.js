@@ -24,3 +24,7 @@ const recorder=setupRecording();setupDirector(recorder);
 
 // Use an optional account name as the pre-game nickname; guests can still choose their own.
 fetch('/api/auth/me',{cache:'no-store'}).then(r=>r.json()).then(d=>{const input=document.getElementById('name');if(d.user&&input&&!window.xash?.running)input.value=d.user.username;}).catch(()=>{});
+
+const armory=document.createElement('a');armory.href='/shop.html';armory.target='_blank';armory.rel='noopener';armory.textContent='Armory · Credits';document.getElementById('room-tools').prepend(armory);armory.onclick=()=>document.exitPointerLock?.();
+async function updateCredits(){try{const r=await fetch('/api/shop',{cache:'no-store'});if(r.ok){const d=await r.json();armory.textContent='Armory · '+d.credits+' credits';}}catch{}}
+updateCredits();setInterval(updateCredits,5000);

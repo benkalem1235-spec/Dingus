@@ -12,10 +12,10 @@ const translations={
 };
 for(const [a,b] of Object.entries(translations))html=html.split(a).join(b);
 html=html.replace('</head>','<link rel="stylesheet" href="/game.css"></head>');
-html=html.replace('<main id="lobby" class="panel">','<main id="lobby" class="panel"><a href="/" class="back">← ALL ROOMS</a>');
+html=html.replace('<main id="lobby" class="panel">','<main id="lobby" class="panel"><a href="/hub.html" class="back">← ALL ROOMS</a>');
 html=html.replace('<button id="play"', '<label>Team<select id="team"><option value="5">Auto assign</option><option value="2">Counter-Terrorists</option><option value="1">Terrorists</option></select></label><button id="play"');
-html=html.replace('</form>' ,'<p class="guest-note">GUEST PLAY · NO ACCOUNT NEEDED</p></form>');
-html=html.replace('</body>','<div id="room-tools"><a href="/">← Lobby</a><button id="share-room">Copy room invite ↗</button><button id="fullscreen-game">Fullscreen</button></div><script type="module" src="/game-ui.js"></script></body>');
+html=html.replace('</form>' ,'<p class="guest-note">GUEST PLAY · <a href="/account.html" target="_top">SIGN IN BEFORE PLAYING TO EARN SKIN CREDITS</a></p></form>');
+html=html.replace('</body>','<div id="room-tools"><a href="/hub.html">← Game hub</a><button id="share-room">Copy room invite ↗</button><button id="fullscreen-game">Fullscreen</button></div><script type="module" src="/game-ui.js"></script></body>');
 fs.writeFileSync(pub+'/index.html',html);
 const bundle=html.match(/\/assets\/(index-[A-Za-z0-9_-]+\.js)/)[1];let js=fs.readFileSync(pub+'/assets/'+bundle,'utf8');
 const strings={
@@ -38,6 +38,10 @@ for(const [a,b] of Object.entries(strings))js=js.split(a).join(b);
 js=js.replace('r.checked=localStorage.getItem("csweb:fullscreen")!=="false"','r.checked=false');
 // Override the local installation's custom ReGameDLL path for this WASM SDK.
 js=js.replace('mountExtras(o,_),enterGame(canvas)', 'mountExtras(o,_),o.writeFile("/rodir/cstrike/liblist.gam",new TextEncoder().encode(\'game "Counter-Strike"\\nversion "1.6"\\ntype "multiplayer_only"\\ncldll "1"\\ngamedll "dlls/cs.dll"\\ngamedll_linux "dlls/cs.so"\\n\')),enterGame(canvas)');
+// Load the small local model pack before engine startup, without evicting the base asset cache.
+if(!js.includes('mountExtras(o,_),o.writeFile'))throw Error('Skin pack injection target missing');
+js=js.replace('mountExtras(o,_),o.writeFile', 'await(async()=>{const pack=await fetch("/game/skins.zip?v="+status.cosmetics.version);if(!pack.ok)throw Error("Could not load skin models");createUnzip(l).push(new Uint8Array(await pack.arrayBuffer()),true)})(),mountExtras(o,_),o.writeFile');
+
 // The installed valve.rc skips default.cfg, so explicitly set browser gameplay bindings.
 const bindings=['bind w +forward','bind s +back','bind a +moveleft','bind d +moveright','bind mouse1 +attack','bind mouse2 +attack2','bind space +jump','unbind ctrl','bind alt +duck','bind shift +speed','bind e +use','bind r +reload','unbind b','bind m chooseteam','bind y messagemode','bind u messagemode2','bind tab +showscores','bind g drop','bind q lastinv','bind 1 slot1','bind 2 slot2','bind 3 slot3','bind 4 slot4','bind 5 slot5','bind 6 slot6','bind 7 slot7','bind 8 slot8','bind 9 slot9','bind 0 slot10','bind z radio1','bind x radio2','bind c +duck','bind f "impulse 100"','bind mwheelup invprev','bind mwheeldown invnext','bind n buy'];
 js=js.replace('a.Cmd_ExecuteString(`connect ${SERVER_ADDRESS}`)',JSON.stringify(bindings)+'.forEach(cmd=>a.Cmd_ExecuteString(cmd)),a.Cmd_ExecuteString("hud_scale "+Math.min(2,Math.max(1,window.innerWidth/1100))),a.Cmd_ExecuteString(`connect ${SERVER_ADDRESS}`)');
