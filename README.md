@@ -42,7 +42,7 @@ See [third-party notices](THIRD-PARTY.md) and [LICENSE](LICENSE). Do not publish
 
 ## Recording
 
-The front page uses a short, cropped preview from the owner's supplied recording; pause-menu frames were removed. The supplied file has less than a second of usable gameplay. Recording tools remain available in game; C is the default crouch key.
+The front page uses a roughly 26-second edit of the owner's Dust II recording, including first-person and aerial views. Camera changes and the loop seam use short dissolves; the existing chat mask and spectator HUD are cropped out. Recording tools remain available in game; C is the default crouch key.
 
 ## Accounts
 
