@@ -52,3 +52,8 @@ Optional username/password signup and sign-in: `/account.html`. Email signup rem
 ## Armory and game hub
 
 Play from the video landing page to enter the game hub. Host an invite room, choose any supported map, or sign in to earn cosmetic credits from kills and rounds. Crates, equip selections and sell-back are available in the Armory. Read [ECONOMY.md](ECONOMY.md) for rewards, odds, local model generation and persistence. For Docker Compose, create `accounts` owned by HOST_UID/HOST_GID (default 1000), and `runtime/events` writable by engine uid 10001 before launch (the local start script handles both). Generate the local skin pack before launch.
+
+
+## Account entry flow
+
+The entry page contains only name/password sign-in or registration over the gameplay video. Email signup is disabled. Signed-in players skip directly to the compact hub; maps, hosting and crates are shown only after sign-in. The stable launcher opens the game host directly so saved first-party login sessions are recognized.

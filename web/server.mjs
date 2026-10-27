@@ -53,6 +53,11 @@ const server=http.createServer(async(req,res)=>{
  try{
  const u=new URL(req.url,'http://local');let p;try{p=decodeURIComponent(u.pathname);}catch{return json(res,400,{error:'Invalid URL'});}
  if(await auth(req,res,p,u))return;
+ const signedIn=auth.user(req);
+ if(p.startsWith('/api/')&&!signedIn)return json(res,401,{error:'Sign in to continue.'});
+ if(req.method==='GET'&&['/','/account.html'].includes(p)&&signedIn){res.writeHead(303,{Location:'/hub.html','Cache-Control':'no-store'});res.end();return;}
+ if(req.method==='GET'&&(p==='/hub.html'||p==='/shop.html'||p==='/play')&&!signedIn){res.writeHead(303,{Location:'/account.html?next='+encodeURIComponent(p+u.search),'Cache-Control':'no-store'});res.end();return;}
+
  if(p.startsWith('/api/shop')){
   const user=auth.user(req);if(!user)return json(res,401,{error:'Sign in to earn credits and use your inventory.'});
   if(req.method==='GET'&&p==='/api/shop')return json(res,200,{username:user.username,...economy.snapshot(user.id)});
@@ -81,6 +86,7 @@ const server=http.createServer(async(req,res)=>{
   return json(res,200,{started:true,spawned:Number(spawned[1]),message:'Headcrab wave! Watch your feet. They despawn after 60 seconds.'});
  }
  if(req.method==='POST'&&p==='/api/rooms'){
+  if(!auth.user(req))return json(res,401,{error:'Sign in to host a room.'});
   // Only same-origin pages may allocate a room. No arbitrary ports, servers or commands.
   if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return json(res,403,{error:'Origin rejected'});
   const ip=req.socket.remoteAddress,now=Date.now();if(now-(rate.get(ip)||0)<3000)return json(res,429,{error:'Please wait a moment.'});rate.set(ip,now);
@@ -123,7 +129,7 @@ const server=http.createServer(async(req,res)=>{
 });
 const ws=new WebSocketServer({noServer:true,maxPayload:65536});
 server.on('upgrade',(req,socket,head)=>{try{const u=new URL(req.url,'http://local'),r=lookup(u.searchParams.get('sala'));
- if(!['/signal','/game-socket'].includes(u.pathname)||!r||!states.get(r.id)||count(r.id)>=r.maxJugadores)return socket.destroy();
+ if(!auth.user(req)||!['/signal','/game-socket'].includes(u.pathname)||!r||!states.get(r.id)||count(r.id)>=r.maxJugadores)return socket.destroy();
  if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return socket.destroy();
  const ip=req.headers['cf-connecting-ip']||req.socket.remoteAddress;
  ws.handleUpgrade(req,socket,head,w=>u.pathname==='/game-socket'?sockets.handle(w,ip,r,()=>auth.user(req)):bridge.handle(w,ip,r));}catch{socket.destroy();}});

@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 const pub='public';let html=fs.readFileSync(pub+'/index.html','utf8');
 html=html.replace('lang="es"','lang="en"');
 const translations={
- 'Partida LAN en el navegador':'Classic multiplayer. Guest access.',
+ 'Partida LAN en el navegador':'Classic multiplayer.',
  'Estado del servidor':'Server status','Servidor':'Room','Mapa':'Map','Jugadores web':'Web players','Tu nombre':'Your nickname','Contraseña del servidor':'Room password',
  'Pantalla completa (bloquea':'Fullscreen (captures', 'y otros atajos)':'and other shortcuts)',
  'Controles táctiles':'Touch controls','>Jugar<':'>Play now ↗<','<summary>Controles</summary>':'<summary>Controls</summary>',
@@ -14,7 +14,7 @@ for(const [a,b] of Object.entries(translations))html=html.split(a).join(b);
 html=html.replace('</head>','<link rel="stylesheet" href="/game.css"></head>');
 html=html.replace('<main id="lobby" class="panel">','<main id="lobby" class="panel"><a href="/hub.html" class="back">← ALL ROOMS</a>');
 html=html.replace('<button id="play"', '<label>Team<select id="team"><option value="5">Auto assign</option><option value="2">Counter-Terrorists</option><option value="1">Terrorists</option></select></label><button id="play"');
-html=html.replace('</form>' ,'<p class="guest-note">GUEST PLAY · <a href="/account.html" target="_top">SIGN IN BEFORE PLAYING TO EARN SKIN CREDITS</a></p></form>');
+html=html.replace('</form>' ,'<p class="guest-note">KILLS AND ROUNDS EARN SKIN CREDITS</p></form>');
 html=html.replace('</body>','<div id="room-tools"><a href="/hub.html">← Game hub</a><button id="share-room">Copy room invite ↗</button><button id="fullscreen-game">Fullscreen</button></div><script type="module" src="/game-ui.js"></script></body>');
 fs.writeFileSync(pub+'/index.html',html);
 const bundle=html.match(/\/assets\/(index-[A-Za-z0-9_-]+\.js)/)[1];let js=fs.readFileSync(pub+'/assets/'+bundle,'utf8');

@@ -1,6 +1,6 @@
 # Dingus Armory
 
-The landing page `/` is the video introduction. Play opens `/hub.html` for accounts, public servers, invite hosting and all maps. `/shop.html` contains crates, collection and credit activity. Guest play remains available; persistent rewards require signing in **before** joining a game. Account/shop links leave the launcher iframe so browser third-party cookie restrictions do not block sign-in.
+The entry page `/` or `/account.html` is name/password sign-in or registration over the gameplay video. Signed-in players automatically skip it and reach `/hub.html` for public servers, invite hosting and all maps. `/shop.html` contains crates, collection and credit activity. An account is required before entering the hub or a game. The stable launcher opens the direct host so saved first-party login sessions work. Email signup remains disabled.
 
 ## Credits
 
