@@ -40,10 +40,6 @@ WASD move, mouse aim, click shoot, Space jump, C crouch, E use, Tab scores. B op
 
 See [third-party notices](THIRD-PARTY.md) and [LICENSE](LICENSE). Do not publish game or Workshop assets without the necessary rights.
 
-## Gameplay footage and director mode
+## Recording
 
-The front page uses a roughly 30-second, silent background reel behind the hero text, combining real first-person, follow-camera and aerial A-site captures from expert bot matches. The original capture ran at about 17 fps; the published reel uses motion interpolation for steadier 30 fps playback. Playback is muted, can be paused and respects reduced-motion/data-saving preferences. This is a test reel; no user-submitted test recordings are included.
-
-Open `/play?room=dust2&director=1` for numbered camera shortcuts: 1 spectate (ends a live life), 2 next player, 3 first person, 4 chase camera, 5 slow pan, 6 stop pan, 7 record/stop, 8 free flight, 9 aerial A site, 0 aerial B site. In free flight use WASD, Space up, F down and mouse look. Director commands stay disabled until the client has joined the server. The capture room has eight YaPB bots at expert difficulty (4). The aerial presets are fixed spectator viewpoints on Dust II, below the map sky ceiling; they do not move live players. Press 8 to leave a fixed aerial view. A planting-specific clip is not yet confirmed in the reel.
-
-The regular game toolbar also has Record clip, with 15/30/60 second options. Saved WebM clips contain video only and download to the player's device. Chat hiding is enabled by default and covers the HUD chat area in the saved frames. Use a regular desktop browser for fullscreen and pointer lock; the in-app browser may not support those reliably.
+The current front page has no gameplay footage. Test footage was removed at the owner's request. Recording tools remain available in game; C is the default crouch key.
