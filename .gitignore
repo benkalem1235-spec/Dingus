@@ -1,0 +1,14 @@
+data/
+runtime/
+custom/
+config/server.cfg
+web/public/assets/
+web/public/maps/
+web/public/weapons/
+node_modules/
+.env
+*.zip
+*.vpk
+*.bsp
+*.wad
+__pycache__/

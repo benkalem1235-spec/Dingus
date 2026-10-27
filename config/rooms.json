@@ -1,0 +1,101 @@
+[
+  {
+    "id": "dust2",
+    "nombre": "Dust II \u00b7 Classic",
+    "mapa": "de_dust2",
+    "puerto": 27015,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "dust2"
+  },
+  {
+    "id": "inferno",
+    "nombre": "Inferno \u00b7 Classic",
+    "mapa": "de_inferno",
+    "puerto": 27025,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "inferno"
+  },
+  {
+    "id": "office",
+    "nombre": "Office \u00b7 Hostage rescue",
+    "mapa": "cs_office",
+    "puerto": 27035,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "office"
+  },
+  {
+    "id": "invite-dust",
+    "nombre": "Invite room",
+    "mapa": "de_dust2",
+    "puerto": 27045,
+    "maxJugadores": 12,
+    "private": true,
+    "token": "generated-on-setup-invite-dust"
+  },
+  {
+    "id": "invite-fire",
+    "nombre": "Invite room",
+    "mapa": "de_inferno",
+    "puerto": 27055,
+    "maxJugadores": 12,
+    "private": true,
+    "token": "generated-on-setup-invite-fire"
+  },
+  {
+    "id": "invite-office",
+    "nombre": "Invite room",
+    "mapa": "cs_office",
+    "puerto": 27065,
+    "maxJugadores": 12,
+    "private": true,
+    "token": "generated-on-setup-invite-office"
+  },
+  {
+    "id": "nuke",
+    "nombre": "Nuke \u00b7 Classic",
+    "mapa": "de_nuke",
+    "puerto": 27075,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "nuke"
+  },
+  {
+    "id": "train",
+    "nombre": "Train \u00b7 Classic",
+    "mapa": "de_train",
+    "puerto": 27085,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "train"
+  },
+  {
+    "id": "aztec",
+    "nombre": "Aztec \u00b7 Classic",
+    "mapa": "de_aztec",
+    "puerto": 27095,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "aztec"
+  },
+  {
+    "id": "italy",
+    "nombre": "Italy \u00b7 Classic",
+    "mapa": "cs_italy",
+    "puerto": 27105,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "italy"
+  },
+  {
+    "id": "assault",
+    "nombre": "Assault \u00b7 Classic",
+    "mapa": "cs_assault",
+    "puerto": 27115,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "assault"
+  }
+]

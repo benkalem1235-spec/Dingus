@@ -1,0 +1,44 @@
+services:
+  web:
+    build: ../web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27016:27016"
+      - "80:80"
+      - "443:443"
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL:?Set the public HTTPS game-server origin}
+    volumes:
+      - ../data:/data:ro
+      - ../config:/config:ro
+    read_only: true
+    tmpfs: ["/tmp:size=64m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+  engine:
+    build: ../server
+    restart: unless-stopped
+    network_mode: "service:web"
+    depends_on: [web]
+    volumes:
+      - ${GAME_INSTALLATION:?Set the absolute owned Half-Life installation directory}:/juego:ro
+      - ../config:/config:ro
+      - ../custom/cstrike:/mapas:ro
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 4g
+  https:
+    image: docker.io/library/caddy:2
+    restart: unless-stopped
+    network_mode: "service:web"
+    depends_on: [web]
+    environment:
+      GAME_DOMAIN: ${GAME_DOMAIN:?Set your game server hostname}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:

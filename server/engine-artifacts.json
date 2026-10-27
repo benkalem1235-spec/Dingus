@@ -1,0 +1,12 @@
+[
+  {
+    "component": "XASH",
+    "url": "https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/xash3d-fwgs-linux-i386.tar.gz",
+    "sha256": "5d5ea74081df5652e6f3759744884ac165967caf52a5776fe54ae38cec426d8a"
+  },
+  {
+    "component": "CS",
+    "url": "https://github.com/Velaron/cs16-client/releases/download/continuous/CS16Client-Linux-i386.tar.gz",
+    "sha256": "d607ced2471ace29003cfdaa8ec7e37b4b2bdd156ff245826b641fe3066b1d75"
+  }
+]
