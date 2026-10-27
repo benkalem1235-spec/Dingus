@@ -53,6 +53,7 @@ const server=http.createServer(async(req,res)=>{
  try{
  const u=new URL(req.url,'http://local');let p;try{p=decodeURIComponent(u.pathname);}catch{return json(res,400,{error:'Invalid URL'});}
  if(await auth(req,res,p,u))return;
+ if(req.method==='GET'&&p==='/healthz')return json(res,200,{ready:rooms.every(r=>!!states.get(r.id))});
  const signedIn=auth.user(req);
  if(p.startsWith('/api/')&&!signedIn)return json(res,401,{error:'Sign in to continue.'});
  if(req.method==='GET'&&['/','/account.html'].includes(p)&&signedIn){res.writeHead(303,{Location:'/hub.html','Cache-Control':'no-store'});res.end();return;}

@@ -27,8 +27,8 @@ python3 - <<'PY'
 import time,urllib.request,json,sys
 for i in range(60):
  try:
-  d=json.load(urllib.request.urlopen('http://127.0.0.1:27016/api/rooms',timeout=2))
-  if all(r['online'] for r in d['rooms']):print('Classic rooms are online.');break
+  d=json.load(urllib.request.urlopen('http://127.0.0.1:27016/healthz',timeout=2))
+  if d['ready']:print('Classic rooms are online.');break
  except Exception:pass
  time.sleep(1)
 else:print('Engine startup is still pending. Check ./status.sh.');sys.exit(1)
