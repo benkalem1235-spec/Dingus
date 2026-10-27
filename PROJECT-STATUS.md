@@ -14,8 +14,8 @@ Source: https://github.com/benkalem1235-spec/Dingus
 ## Current work and checks
 - Mouse capture: explicit Lock mouse button and gameplay click-to-capture implemented; browser interaction still needs a hands-on check.
 - Bot slot replacement: native configuration checked; human joining a full room still needs a live check.
-- Publish the latest bot, menu, mouse and migration changes to GitHub.
-- Test native ARM64 server compatibility for free hosting; keep the working PC server available during testing.
+- Latest bot, menu, mouse and migration changes published to GitHub (commit 07c890d). Seven focused automated checks passed; public health check passed.
+- ARM64 investigation: official engine exists; the game DLL, bots and plugins still need a native rebuild. Dependency downloads stalled before compilation; no ARM deployment validated. See deployment/ARM64-STATUS.md in the source.
 
 ## Added: adaptive bots
 - Measure recent actual-human performance separately for each team, including kills/deaths and round results.
