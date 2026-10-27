@@ -14,7 +14,7 @@ export const RESPUESTA_LISTPLAYERS = /(?:^|\]\s*)\d+ : \S/;
 export async function esperarMotor(ms, ventana = globalThis) {
     const fin = Date.now() + ms;
     while (Date.now() < fin) {
-        if (ventana.xash?.running) return ventana.xash;
+        if (ventana.xash?.running && !ventana.xash.exited) return ventana.xash;
         await dormir(250);
     }
     return null;
@@ -37,6 +37,7 @@ export async function entrarAlEquipo(equipo, motor = null, opciones = {}) {
     try {
         const fin = Date.now() + espera;
         while (!adentro && Date.now() < fin) {
+            if (!motor.running || motor.exited) return false;
             motor.Cmd_ExecuteString('listplayers');
             for (let t = 0; t < pausa && !adentro; t += 50) await dormir(50);
         }
@@ -46,6 +47,7 @@ export async function entrarAlEquipo(equipo, motor = null, opciones = {}) {
     if (!adentro) return false;
     // un instante para que el servidor termine de ubicarte (lo pasa al menú de equipos)
     await dormir(margen);
+    if (!motor.running || motor.exited) return false;
     motor.Cmd_ExecuteString(`jointeam ${equipo}`);
     motor.Cmd_ExecuteString('joinclass 5');   // aspecto automático
     return true;

@@ -24,11 +24,17 @@ const count=id=>bridge.contarSala(id)+sockets.contarSala(id);
 const lookup=token=>rooms.find(r=>r.token===token);
 async function update(){await Promise.all(rooms.map(async r=>states.set(r.id,await consultarInfo(r.puerto))));}
 await update();setInterval(update,5000).unref();
-const mime={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.wasm':'application/wasm','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.zip':'application/zip'};
+const mime={'.mp4':'video/mp4','.webm':'video/webm','.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.wasm':'application/wasm','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.zip':'application/zip'};
 const headers={'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Opener-Policy':'same-origin','Cross-Origin-Resource-Policy':'same-origin'};
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':mime['.json'],'Cache-Control':'no-store',...headers});res.end(JSON.stringify(data));};
 function file(req,res,file){let stat;try{stat=fs.statSync(file);if(!stat.isFile())throw Error();}catch{return json(res,404,{error:'Not found'});}
  const tag='"'+stat.size+'-'+Math.floor(stat.mtimeMs)+'"';if(req.headers['if-none-match']===tag){res.writeHead(304,headers);return res.end();}
+ if(req.headers.range&&/\.(mp4|webm)$/.test(file)){
+  const range=/^bytes=(\d+)-(\d*)$/.exec(req.headers.range);if(!range){res.writeHead(416,{'Content-Range':'bytes */'+stat.size,...headers});return res.end();}
+  const start=Number(range[1]),end=range[2]?Math.min(Number(range[2]),stat.size-1):stat.size-1;
+  if(start>end||start>=stat.size){res.writeHead(416,{'Content-Range':'bytes */'+stat.size,...headers});return res.end();}
+  res.writeHead(206,{'Content-Type':mime[path.extname(file)],'Content-Length':end-start+1,'Content-Range':`bytes ${start}-${end}/${stat.size}`,'Accept-Ranges':'bytes',...headers});if(req.method==='HEAD')return res.end();return fs.createReadStream(file,{start,end}).pipe(res);
+ }
  res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Content-Length':stat.size,'Cache-Control':file.includes('/assets/')?'public, max-age=31536000, immutable':'no-cache','ETag':tag,...headers});if(req.method==='HEAD')return res.end();fs.createReadStream(file).on('error',()=>res.destroy()).pipe(res);}
 const detail=r=>{const s=states.get(r.id);return {id:r.token,name:r.nombre,map:s?.map||r.mapa,players:count(r.id),bots:s?.bots||0,max:r.maxJugadores,online:!!s,private:r.private,mode:r.mode||(r.mapa.startsWith('arena_')?'team_elimination':r.mapa.startsWith('cs_')?'hostage':'bomb')};};
 const rate=new Map();

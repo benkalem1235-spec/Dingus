@@ -65,9 +65,24 @@ static void arenaStatus(){
  }
  snprintf(line,sizeof(line),"arena CT=%d T=%d blocked_spawns=%d HL_pickups=%d\n",ct,t,blocked,pickups);g_engfuncs.pfnServerPrint(line);
 }
+// Fixed aerial camera presets for spectators; live players cannot use them.
+struct Camera {edict_t *entity;int serial;Vector origin;float until;};
+static std::vector<Camera> cameras;
+static void cameraCommand(edict_t *e){
+ const char *c=g_engfuncs.pfnCmd_Argv(0);
+ if(strcmp(c,"dingus_cam_a")&&strcmp(c,"dingus_cam_b")&&strcmp(c,"dingus_cam_free"))RETURN_META(MRES_IGNORED);
+ if(!valid(e)||(e->v.flags&FL_FAKECLIENT)||!e->v.iuser1)RETURN_META(MRES_SUPERCEDE);
+ for(auto i=cameras.begin();i!=cameras.end();)if(i->entity==e)i=cameras.erase(i);else ++i;
+ if(!strcmp(c,"dingus_cam_free"))RETURN_META(MRES_SUPERCEDE);
+ if(strcmp(STRING(gpGlobals->mapname),"de_dust2")){g_engfuncs.pfnClientPrintf(e,print_center,"Aerial presets are available on Dust II.\n");RETURN_META(MRES_SUPERCEDE);}
+ bool a=!strcmp(c,"dingus_cam_a");Vector origin=a?Vector(800,2160,320):Vector(-1880,2320,320);Vector angle(a?25:32,45,0);
+ e->v.iuser1=3;e->v.iuser2=0;e->v.iuser3=0;e->v.movetype=MOVETYPE_NOCLIP;e->v.solid=SOLID_NOT;e->v.velocity=Vector(0,0,0);e->v.view_ofs=Vector(0,0,0);e->v.angles=angle;e->v.v_angle=angle;e->v.fixangle=1;g_engfuncs.pfnSetOrigin(e,origin);g_engfuncs.pfnSetView(e,e);cameras.push_back({e,e->serialnumber,origin,gpGlobals->time+600});
+ RETURN_META(MRES_SUPERCEDE);
+}
 static void gameInit(){g_engfuncs.pfnAddServerCommand((char*)"dingus_headcrabs",spawnWave);g_engfuncs.pfnAddServerCommand((char*)"dingus_arena_status",arenaStatus);RETURN_META(MRES_IGNORED);}
-static int spawn(edict_t *e){if(!strcmp(STRING(e->v.classname),"worldspawn")){g_engfuncs.pfnPrecacheModel((char*)"models/w_shotgun.mdl");g_engfuncs.pfnPrecacheModel((char*)"models/w_9mmar.mdl");crabs.clear();ready=false;lastFrame=nextWave=0;g_engfuncs.pfnPrecacheModel((char*)model);g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_attack1.wav");g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_idle1.wav");ready=true;}RETURN_META_VALUE(MRES_IGNORED,0);}
+static int spawn(edict_t *e){if(!strcmp(STRING(e->v.classname),"worldspawn")){g_engfuncs.pfnPrecacheModel((char*)"models/w_shotgun.mdl");g_engfuncs.pfnPrecacheModel((char*)"models/w_9mmar.mdl");crabs.clear();cameras.clear();ready=false;lastFrame=nextWave=0;g_engfuncs.pfnPrecacheModel((char*)model);g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_attack1.wav");g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_idle1.wav");ready=true;}RETURN_META_VALUE(MRES_IGNORED,0);}
 static void frame(){
+ for(auto i=cameras.begin();i!=cameras.end();){auto e=i->entity;if(!valid(e)||e->serialnumber!=i->serial||!e->v.iuser1||gpGlobals->time>i->until){i=cameras.erase(i);continue;}e->v.iuser1=3;e->v.iuser2=0;e->v.velocity=Vector(0,0,0);g_engfuncs.pfnSetOrigin(e,i->origin);++i;}
  float now=gpGlobals->time;if(now-lastFrame<0.1f)RETURN_META(MRES_IGNORED);lastFrame=now;
  for(auto it=crabs.begin();it!=crabs.end();){
   edict_t*e=it->entity;if(!valid(e)||e->serialnumber!=it->serial){it=crabs.erase(it);continue;}
@@ -92,7 +107,7 @@ static int spawnPost(edict_t *e){
  RETURN_META_VALUE(MRES_IGNORED,0);
 }
 static int getApiPost(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnSpawn=spawnPost;return 1;}
-static int getApi(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnGameInit=gameInit;table->pfnSpawn=spawn;table->pfnStartFrame=frame;return 1;}
+static int getApi(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnGameInit=gameInit;table->pfnSpawn=spawn;table->pfnStartFrame=frame;table->pfnClientCommand=cameraCommand;return 1;}
 C_DLLEXPORT void WINAPI GiveFnptrsToDll(enginefuncs_t *functions,globalvars_t *globals){memcpy(&g_engfuncs,functions,sizeof(g_engfuncs));gpGlobals=globals;}
 C_DLLEXPORT int Meta_Query(char*,plugin_info_t **info,mutil_funcs_t *util){*info=&Plugin_info;gpMetaUtilFuncs=util;return 1;}
 C_DLLEXPORT int Meta_Attach(PLUG_LOADTIME,META_FUNCTIONS *functions,meta_globals_t *globals,gamedll_funcs_t *game){gpMetaGlobals=globals;gpGamedllFuncs=game;memset(functions,0,sizeof(*functions));functions->pfnGetEntityAPI2=getApi;functions->pfnGetEntityAPI2_Post=getApiPost;return 1;}

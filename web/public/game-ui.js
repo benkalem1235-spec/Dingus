@@ -1,3 +1,4 @@
+import {setupRecording,setupDirector} from '/record.js';
 import {setupBuy} from '/buy.js';
 import {entrarAlEquipo} from '/team.js';
 const params=new URLSearchParams(location.search);const share=document.getElementById('share-room');
@@ -6,8 +7,8 @@ document.getElementById('fullscreen-game').onclick=()=>document.documentElement.
 document.addEventListener('pointerlockchange',()=>document.body.classList.toggle('free-mouse',!document.pointerLockElement));
 // The core engine retains the game menu and all standard CS controls.
 
-document.getElementById('form').addEventListener('submit',()=>{entrarAlEquipo(document.getElementById('team').value).catch(console.error);});
-window.addEventListener('beforeunload',()=>{try{window.xash?.Cmd_ExecuteString('disconnect');window.xash?.disconnectTransport();}catch{}});
+document.getElementById('form').addEventListener('submit',()=>{entrarAlEquipo(document.getElementById('team').value).then(joined=>{if(joined)document.dispatchEvent(new Event('cs16-team-joined'));}).catch(console.error);});
+window.addEventListener('beforeunload',()=>{try{window.xash?.disconnectTransport();}catch{}});
 
 setupBuy();
 
@@ -18,3 +19,5 @@ eventButton.onclick=async()=>{
  catch{const toast=document.getElementById('toast');toast.textContent='Could not reach the event host.';toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),5000);}
  finally{eventButton.disabled=false;}
 };
+
+const recorder=setupRecording();setupDirector(recorder);

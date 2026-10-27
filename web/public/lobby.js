@@ -16,3 +16,8 @@ async function refresh(){try{const r=await fetch('/api/rooms',{cache:'no-store'}
  }catch{$('connection').textContent='Host unavailable';$('rooms').textContent='Could not reach the game host. Keep this PC running and try Refresh.';}}
 $('refresh').onclick=refresh;refresh();setInterval(refresh,10000);
 $('create-form').onsubmit=async e=>{e.preventDefault();const button=$('create-button');button.disabled=true;button.textContent='Preparing room…';$('create-error').textContent='';try{const r=await fetch('/api/rooms?map='+encodeURIComponent($('map').value),{method:'POST'});const d=await r.json();if(!r.ok)throw Error(d.error||'Room creation failed.');const link=new URL('/play?room='+encodeURIComponent(d.id),shareOrigin).href;$('room-link').value=link;$('join').href=link;$('copy').onclick=()=>copy(link);$('create-form').hidden=true;$('created').hidden=false;$('room-link').focus();$('room-link').select();}catch(err){$('create-error').textContent=err.message;}finally{button.disabled=false;button.textContent='Create room ↗';}};
+// Decorative, silent background reel; visitors can pause it.
+const film=document.getElementById('gameplay-film'),pause=document.getElementById('film-pause');
+if(matchMedia('(prefers-reduced-motion: reduce)').matches||navigator.connection?.saveData){film.autoplay=false;film.pause();}else film.play().catch(()=>{});
+function filmState(){pause.textContent=film.paused?'▶ Play':'Ⅱ Pause';pause.setAttribute('aria-label',film.paused?'Play background gameplay':'Pause background gameplay');}
+film.addEventListener('play',filmState);film.addEventListener('pause',filmState);filmState();pause.onclick=()=>film.paused?film.play().catch(()=>{}):film.pause();
