@@ -97,5 +97,35 @@
     "maxJugadores": 12,
     "private": false,
     "token": "assault"
+  },
+  {
+    "id": "crossfire",
+    "nombre": "Crossfire \u00b7 Full Half-Life multiplayer map",
+    "mapa": "arena_crossfire",
+    "puerto": 27125,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "crossfire",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "stalkyard",
+    "nombre": "Stalkyard \u00b7 Full Half-Life multiplayer map",
+    "mapa": "arena_stalkyard",
+    "puerto": 27135,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "stalkyard",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "officecomplex",
+    "nombre": "Office Complex Sector \u00b7 Half-Life arena",
+    "mapa": "arena_officecomplex",
+    "puerto": 27145,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "officecomplex",
+    "mode": "team_elimination"
   }
 ]

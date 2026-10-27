@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Prepare locally owned game data. Never commits or uploads game assets."""
-import argparse,hashlib,json,secrets,shutil,subprocess,tempfile,zipfile
+import argparse,hashlib,json,secrets,shutil,subprocess,tempfile,zipfile,sys
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
@@ -13,6 +13,8 @@ with tempfile.TemporaryDirectory() as temp:
  subprocess.run(['git','-C',str(checkout),'fetch','--depth','1','https://github.com/shugavibes/sla-cs16-web.git',revision],check=True)
  subprocess.run(['git','-C',str(checkout),'checkout','-q','FETCH_HEAD'],check=True)
  shutil.copytree(checkout/'web/public/assets',ROOT/'web/public/assets',dirs_exist_ok=True)
+subprocess.run([sys.executable,str(ROOT/'scripts/convert-half-life.py'),str(source),'--output',str(ROOT/'custom/cstrike/maps')],check=True)
+subprocess.run([sys.executable,str(ROOT/'scripts/map-previews.py'),str(source)],check=True)
 # Include only game resources, never personal configs, saves, executables or libraries.
 allowed={'.wad','.pak','.bsp','.res','.txt','.lst','.spr','.mdl','.wav','.mp3','.tga','.bmp','.pcx','.png','.jpg','.dem','.rc','.gam'}
 archive=ROOT/'data/valve.zip';count=0

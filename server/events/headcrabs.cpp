@@ -11,7 +11,7 @@ globalvars_t *gpGlobals=nullptr;
 meta_globals_t *gpMetaGlobals=nullptr;
 gamedll_funcs_t *gpGamedllFuncs=nullptr;
 mutil_funcs_t *gpMetaUtilFuncs=nullptr;
-plugin_info_t Plugin_info={META_INTERFACE_VERSION,"Dingus arena events","1.0.0",__DATE__,"Dingus contributors","https://github.com/benkalem1235-spec/Dingus","DINGUS",PT_STARTUP,PT_NEVER};
+plugin_info_t Plugin_info={META_INTERFACE_VERSION,"Dingus arena events","1.1.0",__DATE__,"Dingus contributors","https://github.com/benkalem1235-spec/Dingus","DINGUS",PT_STARTUP,PT_NEVER};
 struct Crab{edict_t *entity;int serial;float until,jump,attack;};
 static std::vector<Crab> crabs;
 static float lastFrame=0,nextWave=0;
@@ -31,11 +31,11 @@ static void spawnWave(){
  int spawned=0;
  for(int k=0;k<6&&crabs.size()<18;k++){
   edict_t*p=players[k%players.size()];Vector origin;bool found=false;
-  for(int attempt=0;attempt<12;attempt++){
-   float angle=g_engfuncs.pfnRandomFloat(0,6.2831853f),radius=g_engfuncs.pfnRandomFloat(120,260);
-   Vector start=p->v.origin+Vector(std::cos(angle)*radius,std::sin(angle)*radius,80);Vector end=start-Vector(0,0,380);TraceResult tr;
+  for(int attempt=0;attempt<32;attempt++){
+   float angle=g_engfuncs.pfnRandomFloat(0,6.2831853f),radius=g_engfuncs.pfnRandomFloat(64,240);
+   Vector start=p->v.origin+Vector(std::cos(angle)*radius,std::sin(angle)*radius,12);Vector end=start-Vector(0,0,380);TraceResult tr;
    g_engfuncs.pfnTraceLine(start,end,1,p,&tr);if(tr.fStartSolid||tr.fAllSolid||tr.flFraction>=1)continue;
-   origin=tr.vecEndPos+Vector(0,0,16);TraceResult hull;g_engfuncs.pfnTraceHull(origin,origin,1,3,p,&hull);if(hull.fStartSolid||hull.fAllSolid)continue;found=true;break;
+   origin=tr.vecEndPos+Vector(0,0,20);TraceResult hull;g_engfuncs.pfnTraceHull(origin,origin,1,3,p,&hull);if(hull.fStartSolid||hull.fAllSolid)continue;found=true;break;
   }
   if(!found)continue;
   edict_t*e=g_engfuncs.pfnCreateNamedEntity(g_engfuncs.pfnAllocString("info_target"));if(!valid(e))continue;
@@ -47,8 +47,26 @@ static void spawnWave(){
  }
  if(spawned){nextWave=gpGlobals->time+90;char line[100];snprintf(line,sizeof(line),"[Dingus] Headcrab wave spawned: %d\n",spawned);announce(line);}else g_engfuncs.pfnServerPrint("[Dingus] No safe spawn space for headcrabs.\n");
 }
-static void gameInit(){g_engfuncs.pfnAddServerCommand((char*)"dingus_headcrabs",spawnWave);RETURN_META(MRES_IGNORED);}
-static int spawn(edict_t *e){if(!strcmp(STRING(e->v.classname),"worldspawn")){crabs.clear();ready=false;lastFrame=nextWave=0;g_engfuncs.pfnPrecacheModel((char*)model);g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_attack1.wav");g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_idle1.wav");ready=true;}RETURN_META_VALUE(MRES_IGNORED,0);}
+// Read-only RCON diagnostics for converted arenas.
+static void arenaStatus(){
+ int ct=0,t=0,pickups=0,blocked=0;char line[240];
+ for(int i=1;i<gpGlobals->maxEntities;i++){
+  edict_t*e=g_engfuncs.pfnPEntityOfEntIndex(i);if(!valid(e))continue;const char*c=STRING(e->v.classname);
+  if(!strcmp(c,"info_player_start")||!strcmp(c,"info_player_deathmatch")){
+   if(!strcmp(c,"info_player_start"))ct++;else t++;
+   TraceResult tr;g_engfuncs.pfnTraceHull(e->v.origin,e->v.origin,1,1,e,&tr);if(tr.fStartSolid||tr.fAllSolid)blocked++;
+  }
+  if(!strcmp(c,"armoury_entity")&&!strncmp(STRING(e->v.targetname),"dingus_hl_",10)){
+   pickups++;snprintf(line,sizeof(line),"pickup %s model=%s at %.0f %.0f %.0f visible=%d\n",STRING(e->v.targetname),STRING(e->v.model),e->v.origin.x,e->v.origin.y,e->v.origin.z,!(e->v.effects&EF_NODRAW));g_engfuncs.pfnServerPrint(line);
+  }
+  if(i<=gpGlobals->maxClients&&(e->v.flags&FL_CLIENT)){
+   snprintf(line,sizeof(line),"player %d alive=%d health=%.0f weapons=%d at %.0f %.0f %.0f model=%s\n",i,player(e),e->v.health,e->v.weapons,e->v.origin.x,e->v.origin.y,e->v.origin.z,STRING(e->v.model));g_engfuncs.pfnServerPrint(line);
+  }
+ }
+ snprintf(line,sizeof(line),"arena CT=%d T=%d blocked_spawns=%d HL_pickups=%d\n",ct,t,blocked,pickups);g_engfuncs.pfnServerPrint(line);
+}
+static void gameInit(){g_engfuncs.pfnAddServerCommand((char*)"dingus_headcrabs",spawnWave);g_engfuncs.pfnAddServerCommand((char*)"dingus_arena_status",arenaStatus);RETURN_META(MRES_IGNORED);}
+static int spawn(edict_t *e){if(!strcmp(STRING(e->v.classname),"worldspawn")){g_engfuncs.pfnPrecacheModel((char*)"models/w_shotgun.mdl");g_engfuncs.pfnPrecacheModel((char*)"models/w_9mmar.mdl");crabs.clear();ready=false;lastFrame=nextWave=0;g_engfuncs.pfnPrecacheModel((char*)model);g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_attack1.wav");g_engfuncs.pfnPrecacheSound((char*)"headcrab/hc_idle1.wav");ready=true;}RETURN_META_VALUE(MRES_IGNORED,0);}
 static void frame(){
  float now=gpGlobals->time;if(now-lastFrame<0.1f)RETURN_META(MRES_IGNORED);lastFrame=now;
  for(auto it=crabs.begin();it!=crabs.end();){
@@ -64,8 +82,18 @@ static void frame(){
  }
  RETURN_META(MRES_IGNORED);
 }
+// Keep native armoury touch, ammo and round reset behavior; use owned HL world models.
+static int spawnPost(edict_t *e){
+ if(valid(e)&&!strcmp(STRING(e->v.classname),"armoury_entity")){
+  const char *name=STRING(e->v.targetname);
+  if(!strcmp(name,"dingus_hl_shotgun"))g_engfuncs.pfnSetModel(e,"models/w_shotgun.mdl");
+  if(!strcmp(name,"dingus_hl_smg"))g_engfuncs.pfnSetModel(e,"models/w_9mmar.mdl");
+ }
+ RETURN_META_VALUE(MRES_IGNORED,0);
+}
+static int getApiPost(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnSpawn=spawnPost;return 1;}
 static int getApi(DLL_FUNCTIONS *table,int *version){if(*version!=INTERFACE_VERSION){*version=INTERFACE_VERSION;return 0;}memset(table,0,sizeof(*table));table->pfnGameInit=gameInit;table->pfnSpawn=spawn;table->pfnStartFrame=frame;return 1;}
 C_DLLEXPORT void WINAPI GiveFnptrsToDll(enginefuncs_t *functions,globalvars_t *globals){memcpy(&g_engfuncs,functions,sizeof(g_engfuncs));gpGlobals=globals;}
 C_DLLEXPORT int Meta_Query(char*,plugin_info_t **info,mutil_funcs_t *util){*info=&Plugin_info;gpMetaUtilFuncs=util;return 1;}
-C_DLLEXPORT int Meta_Attach(PLUG_LOADTIME,META_FUNCTIONS *functions,meta_globals_t *globals,gamedll_funcs_t *game){gpMetaGlobals=globals;gpGamedllFuncs=game;memset(functions,0,sizeof(*functions));functions->pfnGetEntityAPI2=getApi;return 1;}
+C_DLLEXPORT int Meta_Attach(PLUG_LOADTIME,META_FUNCTIONS *functions,meta_globals_t *globals,gamedll_funcs_t *game){gpMetaGlobals=globals;gpGamedllFuncs=game;memset(functions,0,sizeof(*functions));functions->pfnGetEntityAPI2=getApi;functions->pfnGetEntityAPI2_Post=getApiPost;return 1;}
 C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME,PL_UNLOAD_REASON){return 0;}
