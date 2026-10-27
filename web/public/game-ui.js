@@ -21,3 +21,6 @@ eventButton.onclick=async()=>{
 };
 
 const recorder=setupRecording();setupDirector(recorder);
+
+// Use an optional account name as the pre-game nickname; guests can still choose their own.
+fetch('/api/auth/me',{cache:'no-store'}).then(r=>r.json()).then(d=>{const input=document.getElementById('name');if(d.user&&input&&!window.xash?.running)input.value=d.user.username;}).catch(()=>{});

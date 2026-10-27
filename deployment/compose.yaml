@@ -7,8 +7,12 @@ services:
       - "80:80"
       - "443:443"
     environment:
+      EMAIL_API_KEY: ${EMAIL_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      ACCOUNT_PUBLIC_URL: ${ACCOUNT_PUBLIC_URL:-}
       PUBLIC_URL: ${PUBLIC_URL:?Set the public HTTPS game-server origin}
     volumes:
+      - account_data:/accounts:rw
       - ../data:/data:ro
       - ../config:/config:ro
     read_only: true
@@ -40,5 +44,6 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 volumes:
+  account_data:
   caddy_data:
   caddy_config:

@@ -14,7 +14,12 @@ podman image exists "$ENGINE" || podman build -t "$ENGINE" server
 podman image exists "$WEB" || podman build -t "$WEB" web
 if podman container exists "$ENGINE_NAME"; then podman rm -f "$ENGINE_NAME" >/dev/null; fi
 if podman container exists "$WEB_NAME"; then podman rm -f "$WEB_NAME" >/dev/null; fi
-podman run -d --name "$WEB_NAME" --restart unless-stopped --security-opt label=disable --security-opt no-new-privileges --cap-drop ALL --read-only --tmpfs /tmp:rw,size=64m --memory 512m --pids-limit 256 -p 27016:27016/tcp -p 27018:27018/udp -e PUBLIC_IP="$PUBLIC_IP" -v "$BASE/data:/data:ro" -v "$BASE/config:/config:ro" "$WEB" >/dev/null
+mkdir -p "$BASE/accounts"
+chmod 700 "$BASE/accounts"
+# Writable account records survive container recreation; mail credentials stay outside source.
+MAIL_ENV=()
+if [[ -f "$BASE/config/accounts.env" ]]; then MAIL_ENV=(--env-file "$BASE/config/accounts.env"); fi
+podman run -d --name "$WEB_NAME" "${MAIL_ENV[@]}" --userns keep-id --user "$(id -u):$(id -g)" -v "$BASE/accounts:/accounts:rw" --restart unless-stopped --security-opt label=disable --security-opt no-new-privileges --cap-drop ALL --read-only --tmpfs /tmp:rw,size=64m --memory 512m --pids-limit 256 -p 27016:27016/tcp -p 27018:27018/udp -e PUBLIC_IP="$PUBLIC_IP" -v "$BASE/data:/data:ro" -v "$BASE/config:/config:ro" "$WEB" >/dev/null
 podman run -d --name "$ENGINE_NAME" --restart unless-stopped --network "container:$WEB_NAME" --security-opt label=disable --security-opt no-new-privileges --cap-drop ALL --memory 4096m --pids-limit 512 -v "$SOURCE:/juego:ro" -v "$BASE/config:/config:ro" -v "$BASE/custom/cstrike:/mapas:ro" "$ENGINE" >/dev/null
 python3 - <<'PY'
 import time,urllib.request,json,sys

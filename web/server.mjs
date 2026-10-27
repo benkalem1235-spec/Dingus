@@ -1,5 +1,7 @@
-// Guest-only, same-origin game host. Engine UDP ports stay inside the container network.
+// Same-origin game host with optional accounts. Engine UDP ports stay inside the container network.
 import http from 'node:http';
+import {createAuth} from './auth.mjs';
+const auth=createAuth();
 import fs from 'node:fs';
 import path from 'node:path';
 import { WebSocketServer } from 'ws';
@@ -42,6 +44,7 @@ const eventVotes=new Map(),eventCooldowns=new Map();
 const server=http.createServer(async(req,res)=>{
  try{
  const u=new URL(req.url,'http://local');let p;try{p=decodeURIComponent(u.pathname);}catch{return json(res,400,{error:'Invalid URL'});}
+ if(await auth(req,res,p,u))return;
  if(req.method==='POST'&&p==='/api/event'){
   if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return json(res,403,{error:'Origin rejected'});
   const r=lookup(u.searchParams.get('sala')),session=req.headers['x-game-session'];

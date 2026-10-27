@@ -42,4 +42,8 @@ See [third-party notices](THIRD-PARTY.md) and [LICENSE](LICENSE). Do not publish
 
 ## Recording
 
-The current front page has no gameplay footage. Test footage was removed at the owner's request. Recording tools remain available in game; C is the default crouch key.
+The front page uses a short, cropped preview from the owner's supplied recording; pause-menu frames were removed. The supplied file has less than a second of usable gameplay. Recording tools remain available in game; C is the default crouch key.
+
+## Accounts
+
+Optional username/password signup and sign-in: `/account.html`. Email signup remains disabled pending mail setup. See [ACCOUNTS.md](ACCOUNTS.md) for persistence and mail configuration. Guest access remains available.

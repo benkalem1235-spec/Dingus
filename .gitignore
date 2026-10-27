@@ -12,3 +12,5 @@ node_modules/
 *.bsp
 *.wad
 __pycache__/
+accounts/
+config/accounts.env
