@@ -27,8 +27,8 @@ Source: https://github.com/benkalem1235-spec/Dingus
 
 ## Hosting target
 - Eight actual human players maximum; bot counts can vary separately.
-- Budget up to CHF 5/month. Oracle ruled out; no card verification for a free cloud trial.
-- Prefer a small fixed-price Linux VPS. AlphaVPS C4G is shortlisted at about CHF 4/month including estimated Swiss VAT and conversion; provider checkout must confirm final cost.
+- Budget up to CHF 5/month. Oracle signup failed because of the card; searching no-card free VPS alternatives again.
+- Fixed-price fallback: AlphaVPS C4G was shortlisted at about CHF 4/month including estimated Swiss VAT and conversion; provider checkout must confirm final cost.
 - ChatGPT Sites continues to host the launcher. Its Worker runtime cannot run the current native CS processes; no game rewrite has been selected.
 - No external game server has been provisioned. Public matches still run on this PC.
 - Accounts, credits, inventories, sessions and owned game assets stay private and move directly to the host over SSH.
@@ -37,5 +37,11 @@ Source: https://github.com/benkalem1235-spec/Dingus
 ## On-demand rooms implemented
 - Three-room cap, explicit join/host startup, idle stop, eight-human cap and all-map catalog implemented. Native startup/shutdown integration checks and ten focused tests passed.
 - Free Render CPU-limit testing exposed intermittent status queries with three rooms; query resilience improved. Real eight-player performance remains untested.
-- Oracle is being reconsidered, but no valid provider account/VM exists yet. No card or fake-card details have been submitted. Cloud deployment still needs legitimate account access.
+- Oracle is unavailable because of the card. No provider VM or SSH access exists yet.
 - See cs16-web/deployment/ON-DEMAND.md for cloud storage/deployment limitations.
+
+## ARM deployment refresh — 28 October 2026
+- Recovered and checksum-verified the native ARM64 images. Real map startup testing found a bot-library path crash missed by build checks.
+- Fixed YaPB installation to its expected addons/yapb/bin path. Under ARM64 emulation, Dust II (8 bots), Office (6 bots), and Crossfire (8 bots) ran concurrently and answered real server queries.
+- ARM-aware deployment script can load prebuilt images and restore private accounts/assets directly from the private transfer.
+- Corrected images passed GitHub run 40647925342; download saved locally and checksums verified. See ARM64-BUILD.md. Full human gameplay and Oracle deployment remain untested.

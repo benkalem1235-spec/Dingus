@@ -8,12 +8,13 @@ elif ! podman inspect -f '{{.State.Running}}' codex-cs16-public | grep -qx true;
  podman start codex-cs16-public >/dev/null
 fi
 python3 - <<'PY'
-import subprocess,re,time,pathlib,sys
+import subprocess,re,time,pathlib,sys,json
 for _ in range(45):
- logs=subprocess.run(['podman','logs','codex-cs16-public'],capture_output=True,text=True)
+ started=json.loads(subprocess.check_output(['podman','inspect','codex-cs16-public'],text=True))[0]['State']['StartedAt']
+ logs=subprocess.run(['podman','logs','--since',started,'codex-cs16-public'],capture_output=True,text=True)
  matches=re.findall(r'https://[a-z0-9-]+\.trycloudflare\.com',logs.stdout+logs.stderr)
  if matches:
-  url=matches[-1];pathlib.Path('runtime/public-url.txt').write_text(url+'\n');print('\nPublic game: '+url+'\nNo player login. Keep this PC and the app running.\nThe URL changes when the tunnel is recreated or restarted.');break
+  url=matches[-1];pathlib.Path('runtime/public-url.txt').write_text(url+'\n');print('\nPublic game: '+url+'\nSign in or register to play. Keep this PC awake and connected.\nThe URL changes when the tunnel is recreated or restarted.');break
  time.sleep(1)
 else:print('Tunnel address is not ready. Check podman logs codex-cs16-public.');sys.exit(1)
 PY

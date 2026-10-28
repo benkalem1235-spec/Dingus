@@ -10,7 +10,7 @@ This build targets a real Linux ARM64 machine, including Oracle Ampere A1. It in
 - A DNS hostname pointing to this VM for Caddy's HTTPS certificate.
 - Native game UDP ports remain internal.
 
-Oracle setup must use legitimate identity/card verification. Keep the tenancy on Free Tier; do not upgrade to Pay As You Go. Resource quotas can limit provisioning; budget alerts alone are not a spending cutoff. No Oracle resource has been created or configured by this preparation.
+The owner cannot complete Oracle card verification, so no Oracle deployment is planned currently. The same package works on another ARM64 Linux host with Docker. An x86-64 host uses the existing x86 build instead.
 
 ## Files
 
@@ -39,4 +39,14 @@ Then update `deployment/live.json` in GitHub to the new HTTPS origin. The perman
 
 ## Current verification boundary
 
-Native ARM64 compilation, library checks, WebRTC module loading and automated application checks passed on GitHub. On-demand room behavior was exercised locally with native x86 engines, including a 512 MiB / 0.1 CPU test. An actual ARM64 match with owned maps still needs testing on the new VM.
+Native ARM64 compilation, library checks, WebRTC module loading and automated application checks passed on GitHub. On-demand room behavior was exercised locally with native x86 engines, including a 512 MiB / 0.1 CPU test. Under QEMU, real ARM64 engines ran Dust II, Office and Crossfire concurrently with bots, and the full ARM64 web image passed authenticated room startup. An actual human match still needs testing on the new VM.
+
+## Shared IPv4 / no domain
+
+For a Docker-capable free VPS behind NAT, use an outbound HTTPS tunnel:
+
+```bash
+bash deployment/deploy.sh /private/path/dingus-private-server-transfer.tar.gz --tunnel /private/path/dingus-arm64-images.tar.gz
+```
+
+On x86-64 omit the last image-archive argument. This selects `compose.tunnel.yaml`, publishes no host ports, and starts cloudflared alongside the web and engine. Read the new trycloudflare.com address in the tunnel service logs, verify the game, then update `deployment/live.json`. Quick tunnel URLs change on restart; the permanent ChatGPT Sites launcher stays the same but must be pointed at the current address. This is prepared configuration; no external free VPS has been tested yet.

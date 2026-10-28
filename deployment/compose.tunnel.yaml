@@ -1,0 +1,60 @@
+# For shared IPv4/NAT hosts: outbound HTTPS tunnel, no published ports.
+services:
+  web:
+    build: ../web
+    user: ${HOST_UID:-1000}:${HOST_GID:-1000}
+    restart: unless-stopped
+    environment:
+      EMAIL_API_KEY: ${EMAIL_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      ACCOUNT_PUBLIC_URL: ${ACCOUNT_PUBLIC_URL:-}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+    volumes:
+    - ../accounts:/accounts:rw
+    - ../runtime/events:/events:ro
+    - ../data:/data:ro
+    - ../config:/config:ro
+    read_only: true
+    tmpfs:
+    - /tmp:size=64m
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    mem_limit: 512m
+  engine:
+    build: ../server
+    restart: unless-stopped
+    network_mode: service:web
+    depends_on:
+    - web
+    volumes:
+    - ../runtime/events:/events:rw
+    - ../runtime/bots:/botdata:rw
+    - ${GAME_INSTALLATION:?Set the absolute owned Half-Life installation directory}:/juego:ro
+    - ../config:/config:ro
+    - ../custom/cstrike:/mapas:ro
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    mem_limit: 4g
+  tunnel:
+    image: docker.io/cloudflare/cloudflared:latest
+    restart: unless-stopped
+    network_mode: service:web
+    depends_on:
+    - web
+    command:
+    - tunnel
+    - --no-autoupdate
+    - --protocol
+    - http2
+    - --url
+    - http://127.0.0.1:27016
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    mem_limit: 192m

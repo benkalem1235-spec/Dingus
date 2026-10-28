@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd -- "$(dirname -- "$0")/.."
-if [[ $# -lt 2 || $# -gt 3 ]]; then echo 'Usage: deployment/deploy.sh /path/private-transfer.tar.gz game.your-domain.example [/path/dingus-arm64-images.tar.gz]' >&2;exit 1;fi
+if [[ $# -lt 2 || $# -gt 3 ]]; then echo 'Usage: deployment/deploy.sh /path/private-transfer.tar.gz game.your-domain.example|--tunnel [/path/dingus-arm64-images.tar.gz]' >&2;exit 1;fi
+TUNNEL=0
+DOMAIN=$2
 COMPOSE_FILES=(-f deployment/compose.yaml)
+if [[ "$DOMAIN" == --tunnel ]]; then TUNNEL=1;DOMAIN=tunnel.invalid;COMPOSE_FILES=(-f deployment/compose.tunnel.yaml);fi
 case "$(uname -m)" in
  x86_64) if [[ $# == 3 ]]; then echo 'The prebuilt image archive is ARM64 only.' >&2;exit 1;fi ;;
  aarch64|arm64) COMPOSE_FILES+=(-f deployment/compose.arm64.yaml) ;;
  *) echo 'Supported hosts: Linux x86-64 or ARM64.' >&2;exit 1;;
 esac
 COMPOSE_FILES+=(-f deployment/compose.on-demand.yaml)
-DOMAIN=$2
 if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]+$ ]]; then echo 'Supply a DNS hostname without scheme or path.' >&2;exit 1;fi
 command -v docker >/dev/null
 docker compose version >/dev/null
@@ -32,5 +34,10 @@ if [[ $# == 3 ]]; then
 else
  docker compose --env-file deployment/.env "${COMPOSE_FILES[@]}" up -d --build
 fi
-printf '\nGame host starting: https://%s\nCheck /healthz, sign in and join a room before changing the permanent launcher.\n' "$DOMAIN"
+if [[ "$TUNNEL" == 1 ]]; then
+ echo 'Game host starting behind an outbound HTTPS tunnel; no domain or inbound ports needed.'
+ echo 'Read the trycloudflare.com URL from the tunnel service logs. It changes when the tunnel restarts.'
+else
+ printf '\nGame host starting: https://%s\nCheck /healthz, sign in and join a room before changing the permanent launcher.\n' "$DOMAIN"
+fi
 echo 'After verifying this host, update deployment/live.json to its HTTPS origin to move the permanent game link.'
