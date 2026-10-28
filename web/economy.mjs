@@ -1,7 +1,7 @@
 // Native/browser adaptation of CSGOMod's owned skins, weighted draws and model selection.
 // Original CSGOMod: Dawid Janik, MIT; see licenses/CSGOMod-MIT.txt.
 import fs from 'node:fs';import path from 'node:path';import {randomInt,randomBytes} from 'node:crypto';
-import {skins,crates,rewards,weapons} from './catalog.mjs';
+import {skins,crates,rewards,weapons,drawCrateSkin} from './catalog.mjs';
 export class Economy{
  constructor(directory='/accounts',random=randomInt){this.random=random;this.file=path.join(directory,'economy.json');this.db=fs.existsSync(this.file)?JSON.parse(fs.readFileSync(this.file,'utf8')):{players:{},seen:{}};}
  save(){fs.writeFileSync(this.file+'.tmp',JSON.stringify(this.db),{mode:0o600});fs.renameSync(this.file+'.tmp',this.file);}
@@ -14,13 +14,12 @@ export class Economy{
   const p=this.player(id);if(p.requests[body.requestId])return p.requests[body.requestId];
   let result;
   if(action==='open'){
-   const crate=crates.find(c=>c.id===body.crate);if(!crate)throw Error('Unknown crate.');if(p.credits<crate.price)throw Error('Not enough credits. Earn more from kills and rounds.');if(p.inventory.length>=500)throw Error('Inventory full. Sell a skin first.');
-   let roll=this.random(100),variant=0;while(roll>=crate.odds[variant])roll-=crate.odds[variant++];
-   const pool=skins.filter(s=>s.variant===variant+1);const skin=pool[this.random(pool.length)];
+   const crate=crates.find(c=>c.id===body.crate);if(!crate)throw Error('Unknown crate.');if(p.credits<crate.price)throw Error('Not enough points. Earn more from kills and rounds.');if(p.inventory.length>=500)throw Error('Inventory full. Sell a skin first.');
+   const skin=drawCrateSkin(crate,this.random);
    const item={id:randomBytes(16).toString('hex'),skinId:skin.id,createdAt:new Date().toISOString()};p.credits-=crate.price;p.inventory.push(item);this.note(p,'crate',-crate.price,crate.name+' → '+skin.label);result={item:{...item,skin},message:'Opened '+skin.label};
   }else if(action==='sell'){
    const index=p.inventory.findIndex(i=>i.id===body.item);if(index<0)throw Error('That skin is no longer in your inventory.');const item=p.inventory[index],skin=skins.find(s=>s.id===item.skinId);
-   p.inventory.splice(index,1);if(p.equipped[skin.weapon]===item.id)delete p.equipped[skin.weapon];p.credits+=skin.sell;this.note(p,'sale',skin.sell,skin.label);result={message:'Sold '+skin.label+' for '+skin.sell+' credits.'};
+   p.inventory.splice(index,1);if(p.equipped[skin.weapon]===item.id)delete p.equipped[skin.weapon];p.credits+=skin.sell;this.note(p,'sale',skin.sell,skin.label);result={message:'Sold '+skin.label+' for '+skin.sell+' points.'};
   }else if(action==='equip'){
    const item=p.inventory.find(i=>i.id===body.item);if(!item)throw Error('You do not own that skin.');const skin=skins.find(s=>s.id===item.skinId);p.equipped[skin.weapon]=item.id;result={message:'Equipped '+skin.label+'. Switch weapons to see it in game.'};
   }else if(action==='unequip'){

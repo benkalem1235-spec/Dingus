@@ -13,7 +13,19 @@ The entry page `/` or `/account.html` is name/password sign-in or registration o
 
 16 local palette finishes: Copper, Tidal, Violet, Aurum on AK-47, M4A1, Desert Eagle and knife. Their sell-back values are 20, 55, 150 and 450 credits respectively. Selling one copy removes that exact item and clears it if equipped. Equip is per weapon; finish changes apply within a few seconds, on the next update while alive. Damage, geometry, animations and hitboxes are unchanged. First-person and held third-person models use the finish; dropped guns do not carry inventory ownership and use original world models.
 
-Field crate costs 100 credits; rarity odds 70/25/4/1%. Elite costs 250; odds 0/75/22/3%. Each of the four weapons is equally likely within a rarity. Every crate yields one item; duplicates are allowed. All prices and odds are shown before opening. Nothing can be purchased with real money.
+The shop calls the existing cosmetic credit balance **points**; stored balances and owned skins are preserved.
+
+| Crate | Points | Eligible weapons/finishes | Common / Rare / Epic / Legendary |
+|---|---:|---|---|
+| Field | 500 | All four weapons, Copper and Tidal | 65 / 35 / 0 / 0% |
+| Rifle | 600 | AK-47 and M4A1, every finish | 25 / 50 / 20 / 5% |
+| Close Quarters | 600 | Desert Eagle and knife, every finish | 25 / 50 / 20 / 5% |
+| Epic | 750 | All weapons, Rare or better | 0 / 35 / 55 / 10% |
+| Aurum | 1,000 | All weapons, Epic or Legendary | 0 / 0 / 80 / 20% |
+
+Epic retains the internal `elite` ID for compatibility. Each eligible skin is equally likely within its rarity. The catalog explicitly lists the skin pool for each crate, and the server draws only from that pool. Contents previews show every eligible skin with its exact per-item chance. All 16 existing model IDs remain unchanged, and no new private model pack is required.
+
+Every crate yields one item; duplicates are allowed. A 4.6-second reel reveals the server-awarded item at its center marker, with a skip control and a short reduced-motion reveal. Animation never determines rewards, and opening retries reuse the same transaction ID. All prices and odds are shown before opening. Nothing can be purchased with real money.
 
 ## Adaptation
 
@@ -30,3 +42,6 @@ The journals and economy cursors must be backed up together. Do not delete journ
 ## Verification
 
 Automated auth/economy/recorder checks cover ownership, insufficient funds, retry idempotency, sell/equip state, rarity boundaries, native journal identity resolution, guest/session revocation, restart persistence and replay prevention. Live testing additionally verifies native round rewards, crate debit, equip deployment and sell-back through the browser. Live test account earned 120 credits from native round events, bought a 100-credit Field crate, equipped a Copper knife, and sold it back for 20 credits. Native diagnostics confirmed both `models/dingus/v_knife_1.mdl` and `p_knife_1.mdl` while alive. Kill rewards are covered by journal tests; no manual human kill was performed in the UI playtest. All 48 generated model files were checked to preserve all non-palette bytes.
+
+
+Crate refresh verification: catalog and economy checks cover the 500/750 point prices, normalized drop probabilities, restricted weapon pools, rarity boundaries, higher-tier resale balance, and reel alignment. A local Chromium fixture verified desktop/mobile previews, server-awarded reveals, skip and reduced motion, equip, insufficient points, and a deliberately lost response that retries without charging twice. Private weapon thumbnails were substituted in this UI fixture; final visual matching uses the host’s installed assets.
