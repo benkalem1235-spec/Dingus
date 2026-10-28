@@ -1,6 +1,6 @@
 # Dingus Armory
 
-The entry page `/` or `/account.html` is name/password sign-in or registration over the gameplay video. Signed-in players automatically skip it and reach `/hub.html` for public servers, invite hosting and all maps. `/shop.html` contains crates, collection and credit activity. An account is required before entering the hub or a game. The stable launcher opens the direct host so saved first-party login sessions work. Email signup remains disabled.
+The entry page `/` or `/account.html` is name/password sign-in or registration over the gameplay video. Signed-in players automatically skip it and reach `/hub.html` for public servers, invite hosting and all maps. `/shop.html` contains crates, collection and point activity. An account is required before entering the hub or a game. The stable launcher opens the direct host so saved first-party login sessions work. Email signup remains disabled.
 
 ## Credits
 
@@ -11,7 +11,7 @@ The entry page `/` or `/account.html` is name/password sign-in or registration o
 
 ## Collection
 
-16 local palette finishes: Copper, Tidal, Violet, Aurum on AK-47, M4A1, Desert Eagle and knife. Their sell-back values are 20, 55, 150 and 450 credits respectively. Selling one copy removes that exact item and clears it if equipped. Equip is per weapon; finish changes apply within a few seconds, on the next update while alive. Damage, geometry, animations and hitboxes are unchanged. First-person and held third-person models use the finish; dropped guns do not carry inventory ownership and use original world models.
+16 local palette finishes: Copper, Tidal, Violet, Aurum on AK-47, M4A1, Desert Eagle and knife. Their suggested listing values are 20, 55, 150 and 450 points respectively; sellers choose their own prices. Listing a copy puts it in escrow and clears it if equipped. Points are paid only by another player who buys it. Equip is per weapon; finish changes apply within a few seconds, on the next update while alive. Damage, geometry, animations and hitboxes are unchanged. First-person and held third-person models use the finish; dropped guns do not carry inventory ownership and use original world models.
 
 The shop calls the existing cosmetic credit balance **points**; stored balances and owned skins are preserved.
 
@@ -48,4 +48,13 @@ Automated auth/economy/recorder checks cover ownership, insufficient funds, retr
 Crate refresh verification: catalog and economy checks cover the 500/750 point prices, normalized drop probabilities, restricted weapon pools, rarity boundaries, higher-tier resale balance, and reel alignment. A local Chromium fixture verified desktop/mobile previews, server-awarded reveals, skip and reduced motion, equip, insufficient points, and a deliberately lost response that retries without charging twice. Private weapon thumbnails were substituted in this UI fixture; final visual matching uses the host’s installed assets.
 
 
-All four existing knife finishes now have Legendary rarity, independent of their preserved model variant IDs. This also reclassifies owned knife copies without changing equipment or model compatibility. Glove item types are restricted to Legendary by the same catalog rule, but gloves are not implemented or awarded. The 500-point Legendary crate is an intentionally generous crate requested by the owner; existing Aurum and other crate prices are unchanged.
+All four existing knife finishes now have Legendary rarity, independent of their preserved model variant IDs. This also reclassifies owned knife copies without changing equipment or model compatibility. Glove item types are Legendary. Optional glove and butterfly rewards are enabled only after installing the corresponding private model pack. The 500-point Legendary crate is an intentionally generous crate requested by the owner; existing Aurum and other crate prices are unchanged.
+
+
+## Player marketplace
+
+Instant game buyback is disabled. Players list an owned skin for any whole-point price from 1 to 1,000,000, with no listing fee. Listed copies leave the inventory and cannot be equipped or listed twice. The owner can cancel an unsold listing. A purchase atomically debits the buyer, credits the seller, transfers the exact item and removes the listing in the same private economy file. Self-purchases, duplicate purchases, insufficient balances and full inventories are rejected. Retry IDs cover listing, cancellation and purchase. Public listings show seller usernames, never private account IDs. Existing completed buybacks remain in history; no balances are reset.
+
+## Optional CSGOMod cosmetic pack
+
+See [MODPACK.md](MODPACK.md). The importer adds enhanced first-person gun models, a Butterfly knife and Crimson Web / Blue Steel gloves. Knife/glove drops remain Legendary-only. The 16 existing skin IDs and owned copies are preserved. A host without this pack offers only installed rewards. New assets stay outside public Git and require the private host rebuild/restart; a real browser match remains required to validate final appearance and animation timing.

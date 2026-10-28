@@ -51,7 +51,7 @@ Optional username/password signup and sign-in: `/account.html`. Email signup rem
 
 ## Armory and game hub
 
-Play from the video landing page to enter the game hub. Host an invite room, choose any supported map, or sign in to earn cosmetic credits from kills and rounds. Crates, equip selections and sell-back are available in the Armory. Read [ECONOMY.md](ECONOMY.md) for rewards, odds, local model generation and persistence. For Docker Compose, create `accounts` owned by HOST_UID/HOST_GID (default 1000), and `runtime/events` writable by engine uid 10001 before launch (the local start script handles both). Generate the local skin pack before launch.
+Play from the video landing page to enter the game hub. Host an invite room, choose any supported map, or sign in to earn cosmetic credits from kills and rounds. Crates, equip selections and player trading are available in the Armory. Read [ECONOMY.md](ECONOMY.md) for rewards, odds, local model generation and persistence. For Docker Compose, create `accounts` owned by HOST_UID/HOST_GID (default 1000), and `runtime/events` writable by engine uid 10001 before launch (the local start script handles both). Generate the local skin pack before launch.
 
 
 ## Account entry flow
@@ -67,3 +67,6 @@ Servers and Crates are now adjacent menu tabs. Occupied rooms keep a fixed total
 ## Gameplay recovery
 
 Game connections detect stalled packet streams and overloaded send queues instead of silently discarding traffic indefinitely. Late packets from replaced connections are ignored. A recovery screen offers reconnecting to the same room after a graphics context loss or engine crash, and disappears if a stalled connection reconnects successfully. Browser gameplay is capped at 60 FPS to reduce rendering load. These safeguards do not establish the cause of every reported freeze; live reproduction requires owned game assets and a running host.
+
+
+Optional Butterfly knife, glove finishes and enhanced first-person weapon models are supported through the pinned private CSGOMod importer. See [MODPACK.md](MODPACK.md). The Armory player market lets players set prices and trade skins for points; the game no longer buys skins back.

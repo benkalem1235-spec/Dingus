@@ -49,3 +49,11 @@ Source: https://github.com/benkalem1235-spec/Dingus
 - Fixed YaPB installation to its expected addons/yapb/bin path. Under ARM64 emulation, Dust II (8 bots), Office (6 bots), and Crossfire (8 bots) ran concurrently and answered real server queries.
 - ARM-aware deployment script can load prebuilt images and restore private accounts/assets directly from the private transfer.
 - Corrected images passed GitHub run 40647925342; download saved locally and checksums verified. See ARM64-BUILD.md. Full human gameplay and Oracle deployment remain untested.
+
+
+## Player marketplace and optional cosmetics
+- Player-set point prices replace instant game sell-back. Listings escrow exact copies; buys transfer points and ownership atomically; sellers can cancel.
+- Captured rolling preview: docs/CRATE-PREVIEW.md. Legendary crate costs 500 points with 80% Legendary / 20% Epic; all knives and gloves are Legendary.
+- Added a pinned private CSGOMod importer and native/browser equipment support for first-person Butterfly knives, glove combinations and enhanced weapon viewmodels.
+- Optional rewards are absent until the private pack is installed; legacy balances, skin IDs and basic model packs remain compatible.
+- Application and two-player browser checks passed. Model preparation and native plugin compilation were checked locally; the home game host still needs asset installation, image rebuild and a live appearance/animation check.

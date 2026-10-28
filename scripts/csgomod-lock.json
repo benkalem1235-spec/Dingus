@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/TheDoctor0/CSGOMod.git",
+  "revision": "a28f3dc5ad81ac4e8db73d45aa2f83efc823fd96",
+  "files": {
+    "cstrike/models/csgo_v2_skins/ak47/v_ak47_0.mdl": "75fbe17980ded9863a61f1cdd9a40ac315b27ab2062762e6dd2108f816518aa8",
+    "cstrike/models/csgo_v2_skins/m4a1/v_m4a1_0.mdl": "fa19aaf70b08a2d0bf6d9a378e2a3050dcfe5998258d1bff3e6956d8270432ab",
+    "cstrike/models/csgo_v2_skins/deagle/v_deagle_0.mdl": "f46b314743885cc6017d46766d392913308ff040f82e4cbb43bc1e8055603b77",
+    "cstrike/models/csgo_v2_skins/knife/v_knife_0.mdl": "c5d85d2ef86a40f5d1274c573043ab16de03e2c3edbc917514d20c13ce3665f3",
+    "cstrike/models/csgo_v2_skins/knife_butterfly/v_knife_butterfly_0.mdl": "953173ae7632eb21fc08d50545395f18cd4776298153f5cf980669fc84c6c1e3",
+    "skins/_gloves/Crimson Web.bmp": "6c775d430bdb9ae4d41d9c1496ed3551a48956557159c5caae7a17e3b15cc9b0",
+    "skins/_gloves/Blue Steel.bmp": "ab749a690be9f5e4a0e49d0cebcab9147d5ae39489315d998e838297b1fbfdd0"
+  }
+}

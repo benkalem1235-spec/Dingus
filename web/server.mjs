@@ -6,7 +6,8 @@ import {watchEconomy} from './economy-events.mjs';
 import {botCommands} from './bot-policy.mjs';
 import {RoomLifecycle} from './room-lifecycle.mjs';
 const auth=createAuth();
-const economy=new Economy();
+const installedCosmetics=JSON.parse(fs.readFileSync('/data/skins.json'));
+const economy=new Economy('/accounts',undefined,{features:installedCosmetics.features||[]});
 import fs from 'node:fs';
 import path from 'node:path';
 import { WebSocketServer } from 'ws';
@@ -35,7 +36,7 @@ const cfg={httpPort:27016,webrtcPort:27018,publicIp:process.env.PUBLIC_IP||'',ma
 const bridge=new RtcBridge(cfg);
 const sockets=new SocketBridge();
 const economyEvents=watchEconomy(economy,rooms,sockets.peers);
-const cosmeticPack=JSON.parse(fs.readFileSync("/data/skins.json"));
+const cosmeticPack=installedCosmetics;
 let syncingEquipment=false;
 async function syncEquipment(){if(syncingEquipment||!adminPassword)return;syncingEquipment=true;try{for(const p of sockets.peers){if(!p.open||!p.address)continue;const user=p.identity?.();const variants=user?economy.selection(user.id):[0,0,0,0];const room=rooms.find(r=>r.id===p.room);if(room)await rcon(room.puerto,adminPassword,"dingus_equip "+p.address+" "+variants.join(" "));}}finally{syncingEquipment=false;}}
 setInterval(()=>syncEquipment().catch(()=>{}),3000).unref();
@@ -99,7 +100,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method!=='POST')return json(res,405,{error:'Method not allowed'});
   if(![`http://${req.headers.host}`,`https://${req.headers.host}`].includes(req.headers.origin)||!String(req.headers['content-type']).startsWith('application/json'))return json(res,403,{error:'Request origin rejected'});
   let text='';for await(const chunk of req){text+=chunk;if(Buffer.byteLength(text)>4096)return json(res,413,{error:'Request too large'});}
-  try{const body=JSON.parse(text);const result=economy.transaction(user.id,p.slice('/api/shop/'.length),body);syncEquipment().catch(()=>{});return json(res,200,{...result,...economy.snapshot(user.id)});}catch(e){return json(res,400,{error:e.message});}
+  try{const body=JSON.parse(text);const result=economy.transaction(user.id,p.slice('/api/shop/'.length),body,{username:user.username});syncEquipment().catch(()=>{});return json(res,200,{...result,...economy.snapshot(user.id)});}catch(e){return json(res,400,{error:e.message});}
  }
  if(req.method==='POST'&&p==='/api/event'){
   if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return json(res,403,{error:'Origin rejected'});

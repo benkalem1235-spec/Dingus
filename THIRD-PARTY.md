@@ -11,3 +11,5 @@
 - Original game assets, map overview images, maps, models and sound: Valve Corporation. Obtained from this PC's local installation. Not included in third-party code licenses.
 
 Game data is served by the configured game host to browser players and is excluded from this source repository.
+
+- Optional cosmetic adapter: TheDoctor0/CSGOMod, source revision `a28f3dc5ad81ac4e8db73d45aa2f83efc823fd96`, MIT code notice retained in `licenses/CSGOMod-MIT.txt`. Upstream art credits: CS:GO Ports and Valve. Pinned model/texture inputs are fetched into ignored private storage, not redistributed in this repository; see `MODPACK.md`.

@@ -43,10 +43,20 @@ test('knife and glove rarity is always Legendary and low-tier crates never award
  for(const skin of skins.filter(s=>s.weapon==='knife')){assert.equal(skin.rarity,'Legendary');assert.equal(skin.tier,4);}
  const field=crates.find(c=>c.id==='field');assert(crateContents(field).every(s=>s.weapon!=='knife'));
  const legendary=crates.find(c=>c.id==='legendary');assert.equal(legendary.price,500);assert.deepEqual(legendary.odds,[0,0,20,80]);
- assert.equal(crateContents(legendary).filter(s=>s.weapon==='knife').length,4);
+ assert.equal(crateContents(legendary).filter(s=>s.weapon==='knife').length,5);
  for(let roll=0;roll<100;roll++){
   let call=0;const skin=drawCrateSkin(legendary,n=>call++===0?roll:n-1);
   assert.equal(skin.tier,roll<20?3:4);
-  if(roll>=20)assert.equal(skin.weapon,'knife');
+  if(roll>=20)assert(['knife','gloves'].includes(skin.weapon));
  }
+});
+
+test('optional model rewards are gated until the private pack is installed',async()=>{
+ const {Economy}=await import('./economy.mjs');const fs=await import('node:fs'),os=await import('node:os'),path=await import('node:path');const dir=fs.mkdtempSync(path.join(os.tmpdir(),'dingus-features-'));
+ try{
+  const legacy=new Economy(dir,()=>0);assert.equal(legacy.snapshot('a').skins.length,16);assert(legacy.snapshot('a').crates.every(c=>c.skinIds.every(id=>!['knife_butterfly','gloves_crimson','gloves_steel'].includes(id))));
+  const modern=new Economy(dir,n=>n-1,{features:['butterfly','gloves']});modern.player('a').credits=500;
+  const item=modern.transaction('a','open',{crate:'legendary',requestId:'aaaaaaaaaaaaaaaa'}).item;assert.equal(item.skin.weapon,'gloves');modern.transaction('a','equip',{item:item.id,requestId:'bbbbbbbbbbbbbbbb'});assert.deepEqual(modern.selection('a'),[12,12,12,12]);
+  const {listingId}=modern.transaction('a','list',{item:item.id,price:50,requestId:'cccccccccccccccc'});const downgraded=new Economy(dir);downgraded.player('buyer').credits=100;assert.equal(downgraded.snapshot('buyer').market[0].available,false);assert.throws(()=>downgraded.transaction('buyer','buy',{listing:listingId,requestId:'dddddddddddddddd'}),/not installed/);assert.equal(downgraded.snapshot('buyer').credits,100);
+ }finally{fs.rmSync(dir,{recursive:true});}
 });

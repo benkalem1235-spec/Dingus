@@ -36,3 +36,7 @@
 @media(min-width:651px) and (max-width:1050px){.crate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .skin-card{border-top-color:var(--rarity,var(--finish))}.skin-card small,.reel-card small{color:var(--rarity,var(--finish))}.reel-card{border-bottom-color:var(--rarity,var(--finish))}
+
+#market-list .skin-card>strong{display:block;color:var(--gold);margin:12px 0}#market-list .skin-card>button{width:100%;margin-top:8px}#sell-price{display:block;width:100%;padding:12px;background:#10140f;color:var(--text);border:1px solid var(--line);margin-top:10px}.shop-tabs{gap:24px;overflow-x:auto}.shop-tabs button{white-space:nowrap}
+
+.glove-symbol{font-size:64px;filter:drop-shadow(0 0 10px var(--finish))}.preview-card .glove-symbol,.reel-card .glove-symbol{font-size:45px}

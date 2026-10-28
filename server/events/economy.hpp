@@ -9,7 +9,8 @@ struct EconPlayer{std::string address;int team=0;float since=0;int equipped[4]={
 static EconPlayer econPlayers[33];
 static const char* econWeapons[]={"ak47","m4a1","deagle","knife"};
 static std::string econBoot;
-static std::string econModels[4][4][3];
+static string_t econModelStrings[4][18][2];
+static bool econModelAvailable[4][18];
 static unsigned long econSequence=0;
 static int econRound=0,econMessage=0,econRecipient=0,econByteCount=0,econBytes[8];
 static std::string econStrings[4];static int econStringCount=0;
@@ -26,7 +27,23 @@ static void econEmit(const char*kind,int index,bool flag){
 static void econReset(){
  unsigned char bytes[12]={};FILE*f=fopen("/dev/urandom","rb");if(f){fread(bytes,1,sizeof(bytes),f);fclose(f);}char b[25];for(int i=0;i<12;i++)snprintf(b+i*2,3,"%02x",bytes[i]);econBoot=b;econSequence=0;econRound=0;econRoundEnded=true;
  for(int i=0;i<33;i++)econPlayers[i]=EconPlayer();
- for(int w=0;w<4;w++)for(int v=1;v<=4;v++)for(int prefix=0;prefix<3;prefix++){char file[128];snprintf(file,sizeof(file),"models/dingus/%s_%s_%d.mdl",prefix==0?"v":prefix==1?"p":"w",econWeapons[w],v);auto&name=econModels[w][v-1][prefix];if(name.empty())name=file;g_engfuncs.pfnPrecacheModel((char*)name.c_str());}
+ // Codes preserve variants 0..4; 5 is Butterfly. Glove sets add 6 or 12.
+ // Only installed viewmodels are precached, so an old private asset pack stays valid.
+ for(int w=0;w<4;w++)for(int code=0;code<18;code++){
+  char view[128],held[128],local[160];int variant=code%6;
+  snprintf(view,sizeof(view),"models/dingus/v_%s_%d.mdl",econWeapons[w],code);
+  snprintf(local,sizeof(local),"cstrike/%s",view);
+  econModelAvailable[w][code]=code==0||access(local,R_OK)==0;
+  if(code==0||!econModelAvailable[w][code])snprintf(view,sizeof(view),"models/v_%s.mdl",econWeapons[w]);
+  else g_engfuncs.pfnPrecacheModel(view);
+  snprintf(held,sizeof(held),"models/dingus/p_%s_%d.mdl",econWeapons[w],variant);
+  snprintf(local,sizeof(local),"cstrike/%s",held);
+  if(!variant||access(local,R_OK)!=0)snprintf(held,sizeof(held),"models/p_%s.mdl",econWeapons[w]);
+  else if(code<6)g_engfuncs.pfnPrecacheModel(held);
+  econModelStrings[w][code][0]=g_engfuncs.pfnAllocString(view);
+  econModelStrings[w][code][1]=g_engfuncs.pfnAllocString(held);
+ }
+
  econDeath=econTeam=econText=econHltv=0;
 }
 static qboolean econConnect(edict_t*e,const char*,const char*address,char*){
@@ -38,7 +55,7 @@ static void econDisconnect(edict_t*e){int i=econIndex(e);if(i>0&&i<=32)econPlaye
 static void econEquip(){
  if(g_engfuncs.pfnCmd_Argc()!=6)return;
  std::string address=g_engfuncs.pfnCmd_Argv(1);if(!econAddress(address.c_str()))return;
- int variants[4];for(int w=0;w<4;w++){const char*s=g_engfuncs.pfnCmd_Argv(w+2);if(strlen(s)!=1||s[0]<'0'||s[0]>'4')return;variants[w]=s[0]-'0';}
+ int variants[4];for(int w=0;w<4;w++){const char*s=g_engfuncs.pfnCmd_Argv(w+2);char*end=nullptr;long value=strtol(s,&end,10);if(!*s||*end||value<0||value>17)return;variants[w]=(int)value;}
  for(int i=1;i<=32;i++)if(econPlayers[i].address==address)for(int w=0;w<4;w++)econPlayers[i].equipped[w]=variants[w];
 }
 static void econStatus(){char line[512];for(int i=1;i<=32;i++){auto&p=econPlayers[i];if(p.address.empty())continue;auto*e=g_engfuncs.pfnPEntityOfEntIndex(i);snprintf(line,sizeof(line),"slot=%d endpoint=%s team=%d equipped=%d,%d,%d,%d alive=%d view=%s held=%s round=%d ended=%d\n",i,p.address.c_str(),p.team,p.equipped[0],p.equipped[1],p.equipped[2],p.equipped[3],player(e),valid(e)?STRING(e->v.viewmodel):"",valid(e)?STRING(e->v.weaponmodel):"",econRound,econRoundEnded);g_engfuncs.pfnServerPrint(line);}}
@@ -48,10 +65,9 @@ static void econPostThink(edict_t*e){
  for(int w=0;w<4;w++){
   char base[96],custom[128];snprintf(base,sizeof(base),"models/v_%s.mdl",econWeapons[w]);snprintf(custom,sizeof(custom),"models/dingus/v_%s_",econWeapons[w]);
   if(strcmp(view,base)&&strncmp(view,custom,strlen(custom)))continue;
-  int v=econPlayers[i].equipped[w];char replacement[128],held[128];
-  if(v){snprintf(replacement,sizeof(replacement),"models/dingus/v_%s_%d.mdl",econWeapons[w],v);snprintf(held,sizeof(held),"models/dingus/p_%s_%d.mdl",econWeapons[w],v);}else{snprintf(replacement,sizeof(replacement),"models/v_%s.mdl",econWeapons[w]);snprintf(held,sizeof(held),"models/p_%s.mdl",econWeapons[w]);}
-  if(strcmp(view,replacement))e->v.viewmodel=g_engfuncs.pfnAllocString(replacement);
-  if(strcmp(STRING(e->v.weaponmodel),held))e->v.weaponmodel=g_engfuncs.pfnAllocString(held);break;
+  int code=econPlayers[i].equipped[w];if(code<0||code>=18||!econModelAvailable[w][code])code=0;
+  e->v.viewmodel=econModelStrings[w][code][0];
+  e->v.weaponmodel=econModelStrings[w][code][1];break;
  }
  RETURN_META(MRES_IGNORED);
 }
