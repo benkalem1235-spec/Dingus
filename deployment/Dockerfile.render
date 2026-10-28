@@ -1,0 +1,70 @@
+# Generated from server/Dockerfile and web/Dockerfile; build from repository root.
+FROM docker.io/library/debian:trixie-slim AS events
+RUN apt-get update && apt-get install -y --no-install-recommends g++ g++-multilib make cmake git ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && rm -rf /var/lib/apt/lists/*
+ARG METAMOD_REV=6bfb29405219f1325134a5e44feffb9580ff3b5f
+WORKDIR /build
+RUN git init headers && cd headers && git remote add origin https://github.com/FWGS/metamod-fwgs.git && git fetch --depth 1 origin "$METAMOD_REV" && git checkout FETCH_HEAD
+COPY server/events/headcrabs.cpp server/events/economy.hpp ./
+RUN g++ -m32 -shared -fPIC -std=c++17 -D_LINUX -DLINUX -DPOSIX -Iheaders/metamod/include/engine -Iheaders/metamod/include/common -Iheaders/metamod/include/dlls -Iheaders/metamod/include/pm_shared -Iheaders/metamod/include/public -Iheaders/metamod/src headcrabs.cpp -o dingus_events.so
+ARG METAMOD_SHA256=797d53cdced518e3ecd517012ce58e5a971e45e31203eefcaaedca4769bff389
+RUN curl -fsSL https://github.com/FWGS/metamod-fwgs/releases/download/continuous/metamod-fwgs_linux_x86.zip -o metamod.zip && echo "$METAMOD_SHA256  metamod.zip" | sha256sum -c - && unzip -q metamod.zip -d package
+
+# Servidor dedicado de CS 1.6: Xash3D FWGS + ReGameDLL_CS + bots YaPB (todo open source).
+# Los archivos del juego (mapas, modelos, sonidos) se montan en /juego (solo lectura).
+# Cada sala de config/salas.conf es un proceso aparte (ver entrypoint.sh).
+
+# ---- 1. Bajar los binarios oficiales (Linux 32 bits) ----------------------------
+FROM --platform=linux/amd64 debian:trixie-slim AS descarga
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl binutils && rm -rf /var/lib/apt/lists/*
+# Versiones probadas (ver FUENTES.txt). Si los "continuous" ya cambiaron, se usa la
+# versión nueva igual y se avisa en el armado.
+ARG XASH_URL=https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/xash3d-fwgs-linux-i386.tar.gz
+ARG XASH_SHA256=5d5ea74081df5652e6f3759744884ac165967caf52a5776fe54ae38cec426d8a
+ARG CS_URL=https://github.com/Velaron/cs16-client/releases/download/continuous/CS16Client-Linux-i386.tar.gz
+ARG CS_SHA256=d607ced2471ace29003cfdaa8ec7e37b4b2bdd156ff245826b641fe3066b1d75
+WORKDIR /tmp/dl
+COPY server/preparar-motor.sh ./
+RUN sh preparar-motor.sh
+
+# ---- 2. Imagen final ------------------------------------------------------------
+# Debian 13 (glibc 2.41) con las bibliotecas de 32 bits: ReGameDLL y YaPB piden
+# glibc 2.38 o más nueva. El servidor es de 32 bits; en una Mac con chip M corre emulado.
+FROM --platform=linux/amd64 debian:trixie-slim AS native
+RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --no-install-recommends libc6:i386 libstdc++6:i386 libgcc-s1:i386 unzip && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --create-home --home-dir /home/xash xash
+COPY --from=descarga /tmp/dl/motor/ /opt/xash/
+COPY --from=events /build/package/addons/ /opt/xash/addons/
+COPY --from=events /build/dingus_events.so /opt/xash/addons/events/dingus_events.so
+COPY server/entrypoint.sh /usr/local/bin/servidor-cs
+COPY server/on-demand.sh /usr/local/bin/cs-demand
+RUN chmod 755 /usr/local/bin/cs-demand /usr/local/bin/servidor-cs /opt/xash/xash3d && chown -R xash:xash /opt/xash
+USER xash
+WORKDIR /opt/xash
+ENV LD_LIBRARY_PATH=/opt/xash
+ENTRYPOINT ["/usr/local/bin/servidor-cs"]
+
+FROM docker.io/library/node:22-bookworm-slim AS browser
+WORKDIR /app
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+COPY web/*.mjs web/browser-transport.txt ./
+COPY web/public ./public
+ARG EXTRAS_URL=https://raw.githubusercontent.com/santiagoPostacchini/CSweb/9dd1703b7e1f53de97f03d53e4b10a902d63c9be/vendor/cs16-client/cstrike/extras.pk3
+RUN node -e "const fs=require('fs'),c=require('crypto');(async()=>{let b;if(fs.existsSync('public/assets/extras-CECzBvGu.pk3'))b=fs.readFileSync('public/assets/extras-CECzBvGu.pk3');else{const r=await fetch(process.argv[1],{signal:AbortSignal.timeout(60000)});if(!r.ok)throw Error('HTTP '+r.status);b=Buffer.from(await r.arrayBuffer());}if(c.createHash('sha256').update(b).digest('hex')!=='49d5e00ce50ed01aace3a1c2035a2959c3f7e4457ca2b6c31d01e4cd2a7a5d69')throw Error('Checksum mismatch');fs.writeFileSync('public/assets/extras-CECzBvGu.pk3',b)})().catch(e=>{console.error(e);process.exit(1)})" "$EXTRAS_URL"
+RUN node parche-cliente.mjs public && node customize.mjs && node validate.mjs
+USER node
+CMD ["node","server.mjs"]
+
+
+FROM native AS render
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 ca-certificates python3 && rm -rf /var/lib/apt/lists/*
+COPY --from=browser /usr/local/bin/node /usr/local/bin/node
+COPY --from=browser /app /app
+COPY deployment/render-entrypoint.sh /usr/local/bin/render-game
+COPY scripts/restore-transfer.py /app/scripts/restore-transfer.py
+RUN ln -s /game-files /juego && mkdir -p /accounts /data /events /control /config /botdata /game-files /mapas && chown -R xash:xash /app /accounts /data /events /control /config /botdata /game-files /mapas && chmod 755 /usr/local/bin/render-game
+USER xash
+WORKDIR /app
+ENV DINGUS_ON_DEMAND=1 DINGUS_MAX_ROOMS=3 DINGUS_MAX_HUMANS=8
+ENTRYPOINT ["/usr/local/bin/render-game"]

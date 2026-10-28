@@ -4,6 +4,7 @@ import {createAuth} from './auth.mjs';
 import {Economy} from './economy.mjs';
 import {watchEconomy} from './economy-events.mjs';
 import {populationTarget} from './bot-policy.mjs';
+import {RoomLifecycle} from './room-lifecycle.mjs';
 const auth=createAuth();
 const economy=new Economy();
 import fs from 'node:fs';
@@ -12,10 +13,17 @@ import { WebSocketServer } from 'ws';
 import { RtcBridge } from './rtc.mjs';
 import {SocketBridge} from './socket-bridge.mjs';
 import { rcon, consultarInfo } from './consulta.mjs';
+const onDemand=process.env.DINGUS_ON_DEMAND==='1';
+const control=process.env.DINGUS_CONTROL_DIR||'/control';
+const maximumRooms=Math.max(1,Math.min(3,Number(process.env.DINGUS_MAX_ROOMS)||3));
+const maximumHumans=Number(process.env.DINGUS_MAX_HUMANS)||8;
+const httpPort=Number(process.env.PORT)||27016;
+if(onDemand)fs.mkdirSync(control,{recursive:true});
 const rooms=JSON.parse(fs.readFileSync('/config/rooms.json'));
+if(onDemand)for(const r of rooms)fs.rmSync(path.join(control,r.id+'.run'),{force:true});
 const adminPassword=fs.readFileSync('/config/server.cfg','utf8').match(/rcon_password "([^"]+)"/)?.[1];
 const assets=JSON.parse(fs.readFileSync('/data/assets.json'));
-const states=new Map();
+const states=new Map(),lastHealthy=new Map();
 function shareOrigin(req){
  const forwarded=req.headers['x-forwarded-proto'];
  // Public visitors keep the HTTPS origin that served them; local visitors get the LAN invite.
@@ -33,7 +41,19 @@ async function syncEquipment(){if(syncingEquipment||!adminPassword)return;syncin
 setInterval(()=>syncEquipment().catch(()=>{}),3000).unref();
 const count=id=>bridge.contarSala(id)+sockets.contarSala(id);
 const lookup=token=>rooms.find(r=>r.token===token);
-async function update(){await Promise.all(rooms.map(async r=>states.set(r.id,await consultarInfo(r.puerto))));}
+const requestRoom=r=>{const f=path.join(control,r.id+'.run');fs.writeFileSync(f+'.tmp',r.mapa+'\n');fs.renameSync(f+'.tmp',f);};
+const leases=new RoomLifecycle({maximum:maximumRooms,count,start:requestRoom,touch:requestRoom,stop:r=>{fs.rmSync(path.join(control,r.id+'.run'),{force:true});states.delete(r.id);lastHealthy.delete(r.id);}});
+const startingRooms=new Map();
+async function startRoom(r){
+ if(!onDemand)return;
+ if(startingRooms.has(r.id))return startingRooms.get(r.id);
+ leases.acquire(r);
+ const pending=(async()=>{for(let n=0;n<60;n++){const info=await consultarInfo(r.puerto,500);if(info?.map===r.mapa){states.set(r.id,info);lastHealthy.set(r.id,Date.now());return;}await new Promise(ok=>setTimeout(ok,500));}leases.release(r.id);throw Error('This room could not start. Try again shortly.');})();
+ startingRooms.set(r.id,pending);try{await pending;}finally{startingRooms.delete(r.id);}
+}
+if(onDemand)setInterval(()=>leases.tick(),10000).unref();
+let updating=false;
+async function update(){if(updating)return;updating=true;try{await Promise.all(rooms.map(async r=>{if(onDemand&&!leases.active.has(r.id)){states.delete(r.id);lastHealthy.delete(r.id);return;}const info=await consultarInfo(r.puerto,onDemand?3000:1500);if(info){states.set(r.id,info);lastHealthy.set(r.id,Date.now());}else if(Date.now()-(lastHealthy.get(r.id)||0)>15000)states.delete(r.id);}));}finally{updating=false;}}
 await update();setInterval(update,5000).unref();
 const appliedBotTargets=new Map();const botPolicyStarted=Date.now();let settingBots=false;
 async function maintainBots(){if(settingBots||!adminPassword)return;settingBots=true;try{for(const r of rooms){const info=states.get(r.id);if(!info)continue;const phase=Math.floor((Date.now()-botPolicyStarted)/180000);const target=populationTarget(info.map,r.maxJugadores,phase);const key=info.map+':'+target;if(appliedBotTargets.get(r.id)===key)continue;for(const cmd of ['yb_quota_mode fill','yb_autovacate 1','yb_autovacate_keep_slots 1','yb_kick_after_player_connect 1','yb_chat 0','yb_chat_percent 0','yb_radio_mode 0','yb_quota '+target])await rcon(r.puerto,adminPassword,cmd);appliedBotTargets.set(r.id,key);}}finally{settingBots=false;}}
@@ -51,14 +71,14 @@ function file(req,res,file){let stat;try{stat=fs.statSync(file);if(!stat.isFile(
   res.writeHead(206,{'Content-Type':mime[path.extname(file)],'Content-Length':end-start+1,'Content-Range':`bytes ${start}-${end}/${stat.size}`,'Accept-Ranges':'bytes',...headers});if(req.method==='HEAD')return res.end();return fs.createReadStream(file,{start,end}).pipe(res);
  }
  res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Content-Length':stat.size,'Cache-Control':file.includes('/assets/')?'public, max-age=31536000, immutable':'no-cache','ETag':tag,...headers});if(req.method==='HEAD')return res.end();fs.createReadStream(file).on('error',()=>res.destroy()).pipe(res);}
-const detail=r=>{const s=states.get(r.id);return {id:r.token,name:r.nombre,map:s?.map||r.mapa,players:count(r.id),bots:s?.bots||0,max:r.maxJugadores,online:!!s,private:r.private,mode:r.mode||(r.mapa.startsWith('arena_')?'team_elimination':r.mapa.startsWith('cs_')?'hostage':'bomb')};};
+const detail=r=>{const s=states.get(r.id);return {id:r.token,name:r.nombre,map:s?.map||r.mapa,players:count(r.id),bots:s?.bots||0,max:r.maxJugadores,online:!!s,private:r.private,state:s?'live':onDemand?(leases.active.has(r.id)?'starting':'sleeping'):'starting',mode:r.mode||(r.mapa.startsWith('arena_')?'team_elimination':r.mapa.startsWith('cs_')?'hostage':'bomb')};};
 const rate=new Map();
 const eventVotes=new Map(),eventCooldowns=new Map();
 const server=http.createServer(async(req,res)=>{
  try{
  const u=new URL(req.url,'http://local');let p;try{p=decodeURIComponent(u.pathname);}catch{return json(res,400,{error:'Invalid URL'});}
  if(await auth(req,res,p,u))return;
- if(req.method==='GET'&&p==='/healthz')return json(res,200,{ready:rooms.every(r=>!!states.get(r.id))});
+ if(req.method==='GET'&&p==='/healthz'){let ready=rooms.every(r=>!!states.get(r.id));if(onDemand){try{ready=Date.now()-fs.statSync(path.join(control,'ready')).mtimeMs<15000;}catch{ready=false;}}return json(res,ready?200:503,{ready});}
  const signedIn=auth.user(req);
  if(p.startsWith('/api/')&&!signedIn)return json(res,401,{error:'Sign in to continue.'});
  if(req.method==='GET'&&['/','/account.html'].includes(p)&&signedIn){res.writeHead(303,{Location:'/hub.html','Cache-Control':'no-store'});res.end();return;}
@@ -102,7 +122,8 @@ const server=http.createServer(async(req,res)=>{
   if(!r)return json(res,409,{error:'All invite rooms are in use. Try a classic room or return later.'});
   r.allocated=now;r.token=(await import('node:crypto')).randomBytes(18).toString('base64url');
   const current=await consultarInfo(r.puerto,500);
-  if(current?.map!==map){
+  if(onDemand){try{await startRoom({...r,mapa:map});}catch(e){r.allocated=0;return json(res,503,{error:e.message});}}
+  else if(current?.map!==map){
    if(!adminPassword){r.allocated=0;return json(res,503,{error:'Map switching is unavailable.'});}
    await rcon(r.puerto,adminPassword,'changelevel '+map);
    let ready=false;
@@ -116,7 +137,7 @@ const server=http.createServer(async(req,res)=>{
   return json(res,201,detail(r));
  }
  if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'Method not allowed'});
- if(p==='/api/rooms')return json(res,200,{shareOrigin:shareOrigin(req),maps:rooms.filter(r=>!r.private).map(r=>({id:r.mapa,name:r.nombre.split(' · ')[0]})),rooms:rooms.filter(r=>!r.private).map(detail)});
+ if(p==='/api/rooms')return json(res,200,{shareOrigin:shareOrigin(req),onDemand,roomLimit:onDemand?maximumRooms:null,activeRooms:onDemand?leases.active.size:rooms.filter(r=>states.get(r.id)).length,maps:rooms.filter(r=>!r.private).map(r=>({id:r.mapa,name:r.nombre.split(' · ')[0]})),rooms:rooms.filter(r=>!r.private).map(detail)});
  if(p==='/api/room'){const r=lookup(u.searchParams.get('room'));return r?json(res,200,detail(r)):json(res,404,{error:'Room link is invalid or expired.'});}
  if(p==='/api/status'){
   const r=lookup(u.searchParams.get('sala'));if(!r)return json(res,404,{error:'Invalid room'});
@@ -126,6 +147,7 @@ const server=http.createServer(async(req,res)=>{
  if(p==='/game/valve.zip')return file(req,res,'/data/valve.zip');
  if(p==='/play'){
   const r=lookup(u.searchParams.get('room'));if(!r)return json(res,404,{error:'Room link is invalid or expired. Return to the lobby.'});
+  try{await startRoom(r);}catch(e){return json(res,503,{error:e.message});}
   let html=fs.readFileSync('/app/public/index.html','utf8');html=html.replace('<head>','<head><script>window.cs16Sala='+JSON.stringify(r.token)+';window.CS16_SHARE_ORIGIN='+JSON.stringify(shareOrigin(req))+';</script>');
   res.writeHead(200,{'Content-Type':mime['.html'],'Cache-Control':'no-store',...headers});return res.end(req.method==='HEAD'?undefined:html);
  }
@@ -135,9 +157,9 @@ const server=http.createServer(async(req,res)=>{
 });
 const ws=new WebSocketServer({noServer:true,maxPayload:65536});
 server.on('upgrade',(req,socket,head)=>{try{const u=new URL(req.url,'http://local'),r=lookup(u.searchParams.get('sala'));
- if(!auth.user(req)||!['/signal','/game-socket'].includes(u.pathname)||!r||!states.get(r.id)||count(r.id)>=r.maxJugadores)return socket.destroy();
+ if(!auth.user(req)||!['/signal','/game-socket'].includes(u.pathname)||!r||!states.get(r.id)||count(r.id)>=r.maxJugadores||(onDemand&&rooms.reduce((n,r)=>n+count(r.id),0)>=maximumHumans))return socket.destroy();
  if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return socket.destroy();
  const ip=req.headers['cf-connecting-ip']||req.socket.remoteAddress;
  ws.handleUpgrade(req,socket,head,w=>u.pathname==='/game-socket'?sockets.handle(w,ip,r,()=>auth.user(req)):bridge.handle(w,ip,r));}catch{socket.destroy();}});
-server.listen(27016,'0.0.0.0',()=>console.log('CS 1.6 webgame ready on :27016; game servers are internal.'));
-for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{economyEvents.close();sockets.closeAll();bridge.closeAll();server.close();setTimeout(()=>process.exit(0),300).unref();});
+server.listen(httpPort,'0.0.0.0',()=>console.log('CS 1.6 webgame ready on :'+httpPort+'; game servers are internal.'));
+for(const sig of ['SIGTERM','SIGINT'])process.on(sig,()=>{economyEvents.close();if(onDemand)leases.close();sockets.closeAll();bridge.closeAll();server.close();setTimeout(()=>process.exit(0),300).unref();});

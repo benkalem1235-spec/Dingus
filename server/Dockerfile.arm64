@@ -29,7 +29,8 @@ FROM debian:trixie-slim
 RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 libgcc-s1 unzip && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --create-home --home-dir /home/xash xash
 COPY --from=build /motor/ /opt/xash/
 COPY entrypoint.sh /usr/local/bin/servidor-cs
-RUN chmod 755 /usr/local/bin/servidor-cs /opt/xash/xash3d && chown -R xash:xash /opt/xash && for f in /opt/xash/xash3d /opt/xash/cstrike/dlls/*.so /opt/xash/addons/metamod/*.so /opt/xash/addons/events/*.so; do ! ldd "$f" 2>&1 | grep 'not found'; done
+COPY on-demand.sh /usr/local/bin/cs-demand
+RUN chmod 755 /usr/local/bin/cs-demand /usr/local/bin/servidor-cs /opt/xash/xash3d && chown -R xash:xash /opt/xash && for f in /opt/xash/xash3d /opt/xash/cstrike/dlls/*.so /opt/xash/addons/metamod/*.so /opt/xash/addons/events/*.so; do ! ldd "$f" 2>&1 | grep 'not found'; done
 USER xash
 WORKDIR /opt/xash
 ENV LD_LIBRARY_PATH=/opt/xash

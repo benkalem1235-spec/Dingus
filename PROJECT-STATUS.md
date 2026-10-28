@@ -33,3 +33,9 @@ Source: https://github.com/benkalem1235-spec/Dingus
 - No external game server has been provisioned. Public matches still run on this PC.
 - Accounts, credits, inventories, sessions and owned game assets stay private and move directly to the host over SSH.
 - ARM artifact and validation details: ARM64-BUILD.md. The artifact expires 31 October 2026; source/build workflow remains in GitHub.
+
+## On-demand rooms implemented
+- Three-room cap, explicit join/host startup, idle stop, eight-human cap and all-map catalog implemented. Native startup/shutdown integration checks and ten focused tests passed.
+- Free Render CPU-limit testing exposed intermittent status queries with three rooms; query resilience improved. Real eight-player performance remains untested.
+- Oracle is being reconsidered, but no valid provider account/VM exists yet. No card or fake-card details have been submitted. Cloud deployment still needs legitimate account access.
+- See cs16-web/deployment/ON-DEMAND.md for cloud storage/deployment limitations.

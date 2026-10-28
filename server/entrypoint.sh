@@ -43,7 +43,7 @@ listar_salas() {
     max=$(numero "$(recortar "${max:-}")" "$MAX_JUGADORES" 2 32)
     bots=$(numero "$(recortar "${bots:-}")" "$BOTS" 0 31)
     dif=$(numero "$(recortar "${dif:-}")" "$BOTS_DIFICULTAD" 0 4)
-    printf '%s|%s|%s|%s|%s|%s|%s\n' "$id" "$nombre" "$mapa" "$max" "$bots" "$dif" $((27015 + n * 10))
+    printf '%s|%s|%s|%s|%s|%s|%s\n' "$id" "$nombre" "$mapa" "$max" "$bots" "$dif" $(( ${CS16_PORT_BASE:-27015} + n * 10))
     n=$((n + 1))
   done
 }
@@ -53,6 +53,8 @@ if [ "${SOLO_LISTAR_SALAS:-0}" = 1 ]; then
   listar_salas
   exit 0
 fi
+
+if [ "${DINGUS_ON_DEMAND:-0}" = 1 ]; then exec /usr/local/bin/cs-demand; fi
 
 cd /opt/xash
 

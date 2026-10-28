@@ -1,0 +1,15 @@
+# Combine with compose.yaml (and compose.arm64.yaml on ARM).
+services:
+  web:
+    environment:
+      DINGUS_ON_DEMAND: "1"
+      DINGUS_MAX_ROOMS: "3"
+      DINGUS_MAX_HUMANS: "8"
+    volumes:
+      - ../runtime/control:/control:rw
+  engine:
+    environment:
+      DINGUS_ON_DEMAND: "1"
+      DINGUS_MAX_ROOMS: "3"
+    volumes:
+      - ../runtime/control:/control:rw

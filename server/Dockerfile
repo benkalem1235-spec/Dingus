@@ -35,7 +35,8 @@ COPY --from=descarga /tmp/dl/motor/ /opt/xash/
 COPY --from=events /build/package/addons/ /opt/xash/addons/
 COPY --from=events /build/dingus_events.so /opt/xash/addons/events/dingus_events.so
 COPY entrypoint.sh /usr/local/bin/servidor-cs
-RUN chmod 755 /usr/local/bin/servidor-cs /opt/xash/xash3d && chown -R xash:xash /opt/xash
+COPY on-demand.sh /usr/local/bin/cs-demand
+RUN chmod 755 /usr/local/bin/cs-demand /usr/local/bin/servidor-cs /opt/xash/xash3d && chown -R xash:xash /opt/xash
 USER xash
 WORKDIR /opt/xash
 ENV LD_LIBRARY_PATH=/opt/xash
