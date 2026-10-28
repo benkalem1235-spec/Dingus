@@ -6,7 +6,7 @@ a closed collision volume so players cannot leave the chosen arena.
 import argparse,struct,re,json
 from pathlib import Path
 ARENAS={
- 'arena_officecomplex':dict(source='c1a2',name='Office Complex Sector',mins=(1344,-1152,-608),maxs=(3008,-416,-400),campaign=True),
+ 'arena_officecomplex':dict(source='c1a2',name='Office Complex Sector',mins=(1216,-1216,-608),maxs=(3136,-352,-400),campaign=True),
  'arena_crossfire':dict(source='crossfire',name='Crossfire',crop=False,mins=(-1100,-50,-1880),maxs=(1080,1740,-1260)),
  'arena_stalkyard':dict(source='stalkyard',name='Stalkyard',crop=False,mins=(-900,0,-48),maxs=(1080,1450,368)),
 }

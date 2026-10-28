@@ -23,7 +23,7 @@ jobs:
       - name: Test native WebRTC module and application checks
         run: |
           docker run --rm --entrypoint node dingus-web:arm64 -e "import('node-datachannel').then(() => console.log('ARM64 WebRTC module loaded'))"
-          docker run --rm --entrypoint node dingus-web:arm64 --test auth.test.mjs economy.test.mjs bot-policy.test.mjs mouse.test.mjs room-lifecycle.test.mjs
+          docker run --rm --entrypoint node dingus-web:arm64 --test auth.test.mjs economy.test.mjs bot-policy.test.mjs mouse.test.mjs room-lifecycle.test.mjs recording.test.mjs recovery.test.mjs transport.test.mjs
       - name: Export ARM64 images
         run: |
           mkdir -p artifacts

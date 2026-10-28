@@ -6,7 +6,7 @@ Enabled alongside the eight CS maps, in both public and invite rooms:
 - **Stalkyard**: the full original multiplayer layout. No added collision borders. All 21 original spawns become 10 CT / 11 T spawns. Seven pickup piles.
 - **Office Complex Sector**: a bounded part of the `c1a2` campaign map. Arena limits: X 1344–3008, Y -1152–-416, Z -608–-400 (GoldSrc units). Six collision-tested spawns per team, split across a connected floor sector. Four pickup piles.
 
-All three retain CS characters and team-elimination rules. Campaign transitions, original enemies and scripted progression are removed. Office doors open on touch. Crossfire's nuke activation scripts are removed. These rooms have no bots configured; invite another player or use the headcrab event.
+All three retain CS characters and team-elimination rules. Campaign transitions, original enemies and scripted progression are removed. Office doors open on touch. Crossfire's nuke activation scripts are removed. Occupied rooms fill with bots once navigation graphs are available. Office Complex bounds are now (1216, -1216, -608) to (3136, -352, -400); regenerate the private BSP and asset archive to apply the expanded sector. Collision-tested spawns are regenerated within the expanded bounds.
 
 Walk over a pickup to collect it. Press **G** to drop your current primary first. The floor pickup uses the owned Half-Life shotgun or SMG model. Collection grants CS's M3 or MP5, with CS mechanics and ammunition. Half-Life's original alternate firing modes and first-person weapon models are not implemented. Each pile supplies two players and replenishes at the next round.
 

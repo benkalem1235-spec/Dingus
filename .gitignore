@@ -17,3 +17,6 @@ config/accounts.env
 
 game-files/
 *private*transfer*.tar.gz
+
+# Local investigation and build verification artifacts
+work/

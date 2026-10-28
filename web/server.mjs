@@ -3,7 +3,7 @@ import http from 'node:http';
 import {createAuth} from './auth.mjs';
 import {Economy} from './economy.mjs';
 import {watchEconomy} from './economy-events.mjs';
-import {populationTarget} from './bot-policy.mjs';
+import {botCommands} from './bot-policy.mjs';
 import {RoomLifecycle} from './room-lifecycle.mjs';
 const auth=createAuth();
 const economy=new Economy();
@@ -55,9 +55,18 @@ if(onDemand)setInterval(()=>leases.tick(),10000).unref();
 let updating=false;
 async function update(){if(updating)return;updating=true;try{await Promise.all(rooms.map(async r=>{if(onDemand&&!leases.active.has(r.id)){states.delete(r.id);lastHealthy.delete(r.id);return;}const info=await consultarInfo(r.puerto,onDemand?3000:1500);if(info){states.set(r.id,info);lastHealthy.set(r.id,Date.now());}else if(Date.now()-(lastHealthy.get(r.id)||0)>15000)states.delete(r.id);}));}finally{updating=false;}}
 await update();setInterval(update,5000).unref();
-const appliedBotTargets=new Map();const botPolicyStarted=Date.now();let settingBots=false;
-async function maintainBots(){if(settingBots||!adminPassword)return;settingBots=true;try{for(const r of rooms){const info=states.get(r.id);if(!info)continue;const phase=Math.floor((Date.now()-botPolicyStarted)/180000);const target=populationTarget(info.map,r.maxJugadores,phase);const key=info.map+':'+target;if(appliedBotTargets.get(r.id)===key)continue;for(const cmd of ['yb_quota_mode fill','yb_autovacate 1','yb_autovacate_keep_slots 1','yb_kick_after_player_connect 1','yb_chat 0','yb_chat_percent 0','yb_radio_mode 0','yb_quota '+target])await rcon(r.puerto,adminPassword,cmd);appliedBotTargets.set(r.id,key);}}finally{settingBots=false;}}
-setInterval(()=>maintainBots().catch(()=>{}),30000).unref();setTimeout(()=>maintainBots().catch(()=>{}),7000).unref();
+let settingBots=false;
+async function maintainBots(){
+ if(settingBots||!adminPassword)return;
+ settingBots=true;
+ try{for(const r of rooms){
+  const info=states.get(r.id);if(!info)continue;
+  // Reapply after engine restarts and graph generation (both reset quota).
+  for(const cmd of botCommands(Math.min(r.maxJugadores,(info.maxPlayers||33)-1)))await rcon(r.puerto,adminPassword,cmd);
+ }}finally{settingBots=false;}
+}
+setInterval(()=>maintainBots().catch(console.error),30000).unref();
+setTimeout(()=>maintainBots().catch(console.error),7000).unref();
 
 const mime={'.mp4':'video/mp4','.webm':'video/webm','.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript','.wasm':'application/wasm','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.zip':'application/zip'};
 const headers={'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Opener-Policy':'same-origin','Cross-Origin-Resource-Policy':'same-origin'};

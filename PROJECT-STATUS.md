@@ -8,7 +8,7 @@ Source: https://github.com/benkalem1235-spec/Dingus
 - Server browser, invite rooms, 11 maps, CS characters and Half-Life arenas/events/pickups.
 - Earned credits, crates, skin collection, equip and sell-back.
 - Neighboring Servers and Crates tabs, improved crate artwork.
-- Bots populated on all maps, map-specific counts with slow variation, bot chat/radio disabled, fill policy configured to make room for humans.
+- Occupied rooms fill their configured population with bots, bot chat/radio disabled, and an extra engine connection slot allows humans to replace bots.
 - Private server transfer archive and restore tools; accounts and owned game assets excluded from public source.
 
 ## Current work and checks
@@ -23,7 +23,11 @@ Source: https://github.com/benkalem1235-spec/Dingus
 - Use several rounds of evidence, gradual changes between rounds, and minimum/maximum difficulty limits.
 - Handle mixed teams, uneven numbers and no-human rooms without feedback loops from bot-only matches.
 - Keep population/slot replacement separate from skill adjustment.
-- Status: planned; not implemented yet.
+- Implemented: YaPB automatic mode 2 adjusts bots on human-containing teams from native performance estimates, with a 60-second balance interval. This is approximate skill matching; the richer recent-round, per-team controller described above remains planned.
+- Fixed playable population replaces the previous three-minute variation; one extra engine connection slot lets humans replace bots.
+- Added stalled-transport detection, overload handling, stale-socket guards and graphics/engine failure recovery.
+- Office Complex crop expanded; private maps and browser asset archive must be regenerated.
+- Live freeze reproduction and expanded-map collision validation remain pending: owned game assets are absent. The pinned public browser bundle was downloaded into scratch space and the complete patch/customization pipeline passed syntax validation.
 
 ## Hosting target
 - Eight actual human players maximum; bot counts can vary separately.

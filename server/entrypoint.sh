@@ -90,8 +90,9 @@ fi
 
 # Prepara la carpeta de una sala: el motor y la lógica de CS son compartidos (enlaces),
 # la configuración, los bots y los mapas de la comunidad son propios de cada sala.
-preparar_sala() { # preparar_sala <dir> <nombre> <bots> <dificultad>
+preparar_sala() { # preparar_sala <dir> <nombre> <bots> <dificultad> <jugadores>
   dir=$1
+  room_population=$(( $5 < 32 ? $5 : 31 ))
   mkdir -p "/botdata/$(basename "$dir")/graph" "/botdata/$(basename "$dir")/train"
   mkdir -p "$dir/cstrike/addons/yapb/data"
   ln -sfn "/botdata/$(basename "$dir")/graph" "$dir/cstrike/addons/yapb/data/graph"
@@ -135,10 +136,12 @@ preparar_sala() { # preparar_sala <dir> <nombre> <bots> <dificultad>
   fi
   # Authoritative overrides: do not let the packaged bot config re-enable chat.
   cat >> "$dir/cstrike/addons/yapb/conf/yapb.cfg" <<BOTCFG
-yb_quota "$3"
+yb_quota "$room_population"
 yb_difficulty "$4"
 yb_quota_mode "fill"
-yb_join_after_player "0"
+yb_join_after_player "1"
+yb_difficulty_auto "2"
+yb_difficulty_auto_balance_interval "60"
 yb_join_delay "1"
 yb_autovacate "1"
 yb_autovacate_keep_slots "1"
@@ -167,7 +170,7 @@ correr_sala() { # correr_sala <id> <mapa> <jugadores> <puerto>  (en la carpeta d
     inicio=$(date +%s)
     set +e
     DINGUS_ROOM_PORT="$puerto" XASH3D_BASEDIR="$PWD" /opt/xash/xash3d -dedicated -game cstrike "$@" -rodir /juego -port "$puerto" -noip6 -dev 1 \
-      +ip 127.0.0.1 +sv_lan 1 +maxplayers "$max" +map "$mapa" < /dev/null
+      +ip 127.0.0.1 +sv_lan 1 +maxplayers "$(( max < 32 ? max + 1 : 32 ))" +map "$mapa" < /dev/null
     codigo=$?
     set -e
     duro=$(( $(date +%s) - inicio ))
@@ -194,7 +197,7 @@ mkdir -p "$RAIZ_SALAS"
 # (con «done <<FIN» el bucle corre en este mismo shell: así «wait» espera a las salas)
 while IFS='|' read -r id nombre mapa max bots dif puerto; do
   echo "== Sala $id: «$nombre» · $mapa · hasta $max jugadores · $bots bots · puerto $puerto"
-  preparar_sala "$RAIZ_SALAS/$id" "$nombre" "$bots" "$dif"
+  preparar_sala "$RAIZ_SALAS/$id" "$nombre" "$bots" "$dif" "$max"
   (cd "$RAIZ_SALAS/$id" && correr_sala "$id" "$mapa" "$max" "$puerto" 2>&1 | sed -u "s/^/[sala $id] /") &
 done <<FIN
 $LISTA

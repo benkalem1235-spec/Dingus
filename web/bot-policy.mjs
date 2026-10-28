@@ -1,3 +1,12 @@
-export const mapPopulation={de_dust2:8,de_inferno:8,cs_office:6,de_nuke:6,de_train:8,de_aztec:6,cs_italy:6,cs_assault:8,arena_crossfire:8,arena_stalkyard:6,arena_officecomplex:4};
-// A small, slow variation in the total-player target; YaPB fill removes a bot for each joining human.
-export function populationTarget(map,maximum,phase=0){const delta=[0,-1,1][Math.abs(phase)%3];return Math.max(2,Math.min(maximum-1,(mapPopulation[map]||6)+delta));}
+// One extra engine slot is reserved by entrypoint.sh for joining humans.
+// The playable population stays fixed; YaPB fill replaces bots one-for-one.
+export function populationTarget(map, maximum) {
+ return Math.max(2, Math.min(31, Math.trunc(Number(maximum) || 12)));
+}
+export const botCommands = maximum => [
+ 'yb_quota_mode fill', 'yb_autovacate 1', 'yb_autovacate_keep_slots 1',
+ 'yb_kick_after_player_connect 1', 'yb_join_after_player 1',
+ 'yb_difficulty_auto 2', 'yb_difficulty_auto_balance_interval 60',
+ 'yb_chat 0', 'yb_chat_percent 0', 'yb_radio_mode 0',
+ 'yb_quota '+populationTarget('',maximum),
+];

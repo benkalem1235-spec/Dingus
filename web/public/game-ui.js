@@ -1,3 +1,5 @@
+import {setupRecovery} from '/recovery.js';
+setupRecovery();
 import {setupRecording,setupDirector} from '/record.js';
 import {setupBuy} from '/buy.js';
 import {setupMouseCapture} from '/mouse.js';

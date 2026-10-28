@@ -1,1 +1,30 @@
-connectTransport(timeout=20000){this.onTransportState?.('connecting');return new Promise((resolve,reject)=>{const protocol=location.protocol==='https:'?'wss':'ws';const ws=new WebSocket(`${protocol}://${location.host}/game-socket?sala=${encodeURIComponent(window.cs16Sala||'')}`);ws.binaryType='arraybuffer';this.ws=ws;this.peer=ws;let ready=false;const timer=setTimeout(()=>{if(!ready){ws.close();reject(new Error('Game connection timed out. Please retry.'));}},timeout);ws.onmessage=e=>{if(typeof e.data==='string'){let m;try{m=JSON.parse(e.data);}catch{return;}if(m.type==='ready'){this.session=m.session;ready=true;clearTimeout(timer);this.channel={get readyState(){return ws.readyState===1?'open':'closed'},send:b=>{if(ws.readyState===1&&ws.bufferedAmount<1048576)ws.send(b)}};this.onTransportState?.('connected');resolve();}}else this.receive(e.data);};ws.onerror=()=>{if(!ready){clearTimeout(timer);reject(new Error('Could not reach this game room.'));}};ws.onclose=()=>{clearTimeout(timer);if(ready)this.lost(ws);else reject(new Error('Room unavailable or full. Return to the lobby.'));};});}
+connectTransport(timeout=20000){
+ this.onTransportState?.('connecting');
+ return new Promise((resolve,reject)=>{
+  const protocol=location.protocol==='https:'?'wss':'ws';
+  const ws=new WebSocket(`${protocol}://${location.host}/game-socket?sala=${encodeURIComponent(window.cs16Sala||'')}`);
+  ws.binaryType='arraybuffer';this.ws=ws;this.peer=ws;
+  let ready=false,receivedPacket=false,lastPacket=Date.now(),watchdog;
+  const cleanup=()=>{clearTimeout(timer);clearInterval(watchdog)};
+  const fail=message=>{cleanup();try{ws.close()}catch{};if(!ready)reject(new Error(message));else if(this.ws===ws){document.dispatchEvent(new CustomEvent('cs16-connection-stalled',{detail:message}));this.lost(ws)}};
+  const timer=setTimeout(()=>fail('Game connection timed out. Please retry.'),timeout);
+  ws.onmessage=e=>{
+   if(this.ws!==ws)return;
+   if(typeof e.data==='string'){
+    let m;try{m=JSON.parse(e.data)}catch{return}
+    if(m.type==='ready'&&!ready){
+     this.session=m.session;ready=true;lastPacket=Date.now();clearTimeout(timer);
+     this.channel={get readyState(){return ws.readyState===1?'open':'closed'},send:b=>{
+      if(ws.readyState!==1)return;
+      if(ws.bufferedAmount>=1048576){fail('Game connection overloaded. Reconnecting…');return}
+      ws.send(b);
+     }};
+     watchdog=setInterval(()=>{if(this.ws!==ws||ws.readyState!==1)return cleanup();if(document.visibilityState!=='visible'){lastPacket=Date.now();return}if(Date.now()-lastPacket>(receivedPacket?20000:120000))fail('Game server stopped responding. Reconnecting…')},5000);
+     document.dispatchEvent(new Event('cs16-connection-restored'));this.onTransportState?.('connected');resolve();
+    }
+   }else if(ready){receivedPacket=true;lastPacket=Date.now();this.receive(e.data)}
+  };
+  ws.onerror=()=>fail('Could not reach this game room.');
+  ws.onclose=()=>{cleanup();if(this.ws!==ws)return;if(ready)this.lost(ws);else reject(new Error('Room unavailable or full. Return to the lobby.'))};
+ });
+}

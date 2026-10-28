@@ -15,7 +15,7 @@ export class SocketBridge {
   const window=setInterval(()=>{packets=0;bytes=0;},1000);
   const ping=setInterval(()=>{if(!alive)return close();alive=false;try{ws.ping();}catch{close();}},15000);
   udp.on('error',close);
-  udp.on('message',(msg,from)=>{if(!peer.open||from.port!==room.puerto||from.address!=='127.0.0.1'||ws.readyState!==1)return;if(ws.bufferedAmount>1<<20)return;ws.send(msg,{binary:true});});
+  udp.on('message',(msg,from)=>{if(!peer.open||from.port!==room.puerto||from.address!=='127.0.0.1'||ws.readyState!==1)return;if(ws.bufferedAmount>1<<20){ws.close(1013,'Game connection overloaded; reconnect');return close();}ws.send(msg,{binary:true},error=>{if(error)close();});});
   udp.bind(0,`127.0.${1+Math.floor(slot/254)}.${1+slot%254}`,()=>{peer.address=udp.address().address+":"+udp.address().port;peer.open=true;ws.send(JSON.stringify({type:'ready',session:peer.session}));});
   ws.on('pong',()=>alive=true);
   ws.on('message',(data,binary)=>{if(!binary||!peer.open)return;if(++packets>500||(bytes+=data.length)>1024*1024)return ws.close(1008,'Traffic limit');if(data.length>65507||esRcon(data))return;udp.send(data,room.puerto,'127.0.0.1');});
