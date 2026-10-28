@@ -1,0 +1,36 @@
+# Native ARM64 build. Run on an ARM64 host or with binfmt/QEMU configured.
+FROM debian:trixie-slim AS build
+RUN test "$(dpkg --print-architecture)" = arm64
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake ninja-build python3 git ca-certificates curl unzip file && rm -rf /var/lib/apt/lists/*
+ARG CS_REV=a238ef131803ed7592c4ba701499027c862889ee
+ARG METAMOD_REV=6bfb29405219f1325134a5e44feffb9580ff3b5f
+WORKDIR /build
+RUN git init cs && cd cs && git remote add origin https://github.com/FWGS/cs16-client.git && git fetch --depth 1 origin "$CS_REV" && git checkout FETCH_HEAD && git submodule update --init --recursive --depth 1 3rdparty/ReGameDLL_CS 3rdparty/yapb 3rdparty/miniutl
+RUN git init meta && cd meta && git remote add origin https://github.com/FWGS/metamod-fwgs.git && git fetch --depth 1 origin "$METAMOD_REV" && git checkout FETCH_HEAD
+# These upstream flags are x86-only; the rest of both projects supports ARM64.
+RUN sed -i 's/-fcf-protection=none//g' cs/3rdparty/ReGameDLL_CS/regamedll/CMakeLists.txt meta/metamod/CMakeLists.txt
+RUN cmake -S cs -B cs-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_CLIENT=OFF -DBUILD_MAINUI=OFF -DBUILD_SERVER=ON -DYAPB_WITH_TLS=OFF -DYAPB_WITH_AMXX=OFF && cmake --build cs-build --parallel 2 && cmake --install cs-build --prefix /bundle
+RUN cmake -S meta -B meta-build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build meta-build --parallel 2
+COPY events/headcrabs.cpp events/economy.hpp /build/events/
+RUN g++ -shared -fPIC -std=c++17 -D_LINUX -DLINUX -DPOSIX -DXASH_64BIT -Imeta/metamod/include/engine -Imeta/metamod/include/common -Imeta/metamod/include/dlls -Imeta/metamod/include/pm_shared -Imeta/metamod/include/public -Imeta/metamod/src events/headcrabs.cpp -o /bundle/dingus_events.so
+ARG XASH_URL=https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/xashds-linux-arm64.tar.gz
+ARG XASH_SHA256=d14e67b884ca9e4237305e5f2abd04614ccafd1f97d10eb0c266fa15bfa15383
+RUN curl -fL --retry 3 --max-time 180 "$XASH_URL" -o engine.tar.gz && echo "$XASH_SHA256  engine.tar.gz" | sha256sum -c - && mkdir engine && tar -xzf engine.tar.gz -C engine
+RUN set -eu; mkdir -p /motor/cstrike/dlls /motor/addons/metamod /motor/addons/events /motor/valve; \
+    exe=$(find /build/engine -type f \( -name xash -o -name xashds -o -name xash3d \) | head -1); test -n "$exe"; \
+    cp -a "$(dirname "$exe")/." /motor/; cp "$exe" /motor/xash3d; \
+    cp /bundle/cstrike/dlls/cs*.so /motor/cstrike/dlls/cs.so; \
+    cp /bundle/cstrike/dlls/yapb*.so /motor/cstrike/dlls/yapb.so; \
+    cp /bundle/cstrike/extras.pk3 /motor/cstrike/; \
+    cp /build/meta-build/metamod/metamod*.so /motor/addons/metamod/metamod.so; \
+    cp /bundle/dingus_events.so /motor/addons/events/; \
+    for f in /motor/xash3d /motor/cstrike/dlls/*.so /motor/addons/metamod/*.so /motor/addons/events/*.so; do file "$f" | grep -q aarch64; done
+FROM debian:trixie-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 libgcc-s1 unzip && rm -rf /var/lib/apt/lists/* && useradd --uid 10001 --create-home --home-dir /home/xash xash
+COPY --from=build /motor/ /opt/xash/
+COPY entrypoint.sh /usr/local/bin/servidor-cs
+RUN chmod 755 /usr/local/bin/servidor-cs /opt/xash/xash3d && chown -R xash:xash /opt/xash && for f in /opt/xash/xash3d /opt/xash/cstrike/dlls/*.so /opt/xash/addons/metamod/*.so /opt/xash/addons/events/*.so; do ! ldd "$f" 2>&1 | grep 'not found'; done
+USER xash
+WORKDIR /opt/xash
+ENV LD_LIBRARY_PATH=/opt/xash
+ENTRYPOINT ["/usr/local/bin/servidor-cs"]

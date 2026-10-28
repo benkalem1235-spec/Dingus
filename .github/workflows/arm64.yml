@@ -1,0 +1,31 @@
+name: ARM64 build
+on:
+  workflow_dispatch:
+  push:
+    paths: ['server/**', 'web/**', '.github/workflows/arm64.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build native server and plugins
+        run: docker build -f server/Dockerfile.arm64 -t dingus-engine:arm64 server
+      - name: Build native web transport
+        run: docker build -t dingus-web:arm64 web
+      - name: Test native WebRTC module and application checks
+        run: |
+          docker run --rm --entrypoint node dingus-web:arm64 -e "import('node-datachannel').then(() => console.log('ARM64 WebRTC module loaded'))"
+          docker run --rm --entrypoint node dingus-web:arm64 --test auth.test.mjs economy.test.mjs bot-policy.test.mjs mouse.test.mjs
+      - name: Export ARM64 images
+        run: |
+          mkdir -p artifacts
+          docker save dingus-engine:arm64 dingus-web:arm64 | gzip > artifacts/dingus-arm64-images.tar.gz
+          sha256sum artifacts/dingus-arm64-images.tar.gz > artifacts/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dingus-arm64
+          path: artifacts/
+          retention-days: 3

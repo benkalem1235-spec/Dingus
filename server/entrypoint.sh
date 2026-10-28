@@ -64,7 +64,9 @@ fi
 
 # ¿Se pueden cargar la lógica de CS y los bots en este sistema?
 falta_algo() { # falta_algo <biblioteca> -> imprime el problema si no se puede cargar
-  salida=$(/lib/ld-linux.so.2 --list "$1" 2>&1) || true
+  loader=/lib/ld-linux.so.2
+  if [ "$(uname -m)" = aarch64 ]; then loader=/lib/ld-linux-aarch64.so.1; fi
+  salida=$("$loader" --list "$1" 2>&1) || true
   case "$salida" in
     *"not found"*|*"No such file"*|*"cannot"*) printf '%s\n' "$salida" | grep -E "not found|No such|cannot" ;;
   esac
