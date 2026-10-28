@@ -18,7 +18,7 @@ function preview(crate){
  $('contents-odds').replaceChildren(oddsFor(crate));
  $('contents-list').replaceChildren();
  for(const skin of crateContents(crate)){
-  const card=document.createElement('article');card.className='skin-card preview-card';card.style.setProperty('--finish',skin.color);
+  const card=document.createElement('article');card.className='skin-card preview-card';card.style.setProperty('--finish',skin.color);card.style.setProperty('--rarity',skin.rarityColor||skin.color);
   const title=document.createElement('h3');title.textContent=skin.label;
   const rarity=document.createElement('small');rarity.textContent=skin.rarity;
   const chance=document.createElement('p');chance.className='skin-chance';chance.textContent=Number(skin.chance.toFixed(2))+'% drop chance';
@@ -33,7 +33,7 @@ async function animateOpening(crate,item){
  const dialog=$('opening-dialog'),track=$('reel-track'),viewport=$('reel-viewport');
  $('opening-title').textContent=crate.name;track.replaceChildren();track.style.transform='translateX(0px)';
  for(const skin of buildReel(crate,item.skin)){
-  const card=document.createElement('div');card.className='reel-card';card.style.setProperty('--finish',skin.color);
+  const card=document.createElement('div');card.className='reel-card';card.style.setProperty('--finish',skin.color);card.style.setProperty('--rarity',skin.rarityColor||skin.color);
   const label=document.createElement('strong');label.textContent=skin.label;
   const rarity=document.createElement('small');rarity.textContent=skin.rarity;card.append(art(skin),label,rarity);track.append(card);
  }
@@ -48,13 +48,13 @@ async function animateOpening(crate,item){
 }
 $('opening-dialog').addEventListener('cancel',event=>{event.preventDefault();spin?.finish();});
 $('contents-close').onclick=()=>$('contents-dialog').close();
-function showResult(item){const s=item.skin;$('result').style.setProperty('--finish',s.color);$('result-art').replaceChildren(art(s));$('result-title').textContent=s.label;$('result-rarity').textContent=s.rarity+' · Sell-back value '+s.sell+' points';$('result-equip').onclick=async()=>{await transact('equip',{item:item.id});$('result').close();};$('result').showModal();}
+function showResult(item){const s=item.skin;$('result').style.setProperty('--finish',s.color);$('result').style.setProperty('--rarity',s.rarityColor||s.color);$('result-art').replaceChildren(art(s));$('result-title').textContent=s.label;$('result-rarity').textContent=s.rarity+' · Sell-back value '+s.sell+' points';$('result-equip').onclick=async()=>{await transact('equip',{item:item.id});$('result').close();};$('result').showModal();}
 function render(){
  $('balance').textContent=state?.credits?.toLocaleString()??'0';$('item-count').textContent=state?.inventory?.length??0;
  $('crate-list').replaceChildren();for(const c of (state?.crates||crates)){const card=document.createElement('article');card.className='crate-card '+c.id;card.style.setProperty('--crate-color',c.color);
  const visual=document.createElement('div');visual.className='crate-art';const crateImage=document.createElement('img');crateImage.src='/crate-'+c.id+'.svg';crateImage.alt=c.name;crateImage.className='crate-render';visual.append(crateImage);const h=document.createElement('h3');h.textContent=c.name;const p=document.createElement('p');p.textContent=c.description;const odds=oddsFor(c);const b=button(busy?'Working…':!state?'Sign in to open':state.credits<c.price?'Need '+(c.price-state.credits)+' more points':'Open · '+c.price+' points',()=>transact('open',{crate:c.id}),'primary crate-buy');b.disabled=busy||!state||state.credits<c.price;const contents=button('View contents · '+crateContents(c).length+' skins',()=>preview(c),'crate-contents');card.append(visual,h,p,odds,contents,b);$('crate-list').append(card);}
  $('inventory-list').replaceChildren();let list=state?.inventory||[];if($('weapon-filter').value!=='all')list=list.filter(i=>i.skin.weapon===$('weapon-filter').value);
- for(const item of list){const s=item.skin,card=document.createElement('article');card.className='skin-card';card.style.setProperty('--finish',s.color);const rarity=document.createElement('small');rarity.textContent=s.rarity.toUpperCase();const h=document.createElement('h3');h.textContent=s.label;const actions=document.createElement('div');actions.className='skin-actions';const equipped=state.equipped[s.weapon]===item.id;const eq=button(equipped?'Equipped · Restore original':'Equip',()=>transact(equipped?'unequip':'equip',equipped?{weapon:s.weapon}:{item:item.id}),equipped?'equipped':'');const sell=button('Sell · '+s.sell,()=>{pendingSell=item;$('sell-description').textContent=s.label+' → '+s.sell+' points';$('sell-dialog').showModal();});eq.disabled=sell.disabled=busy;actions.append(eq,sell);card.append(art(s),rarity,h,actions);$('inventory-list').append(card);}
+ for(const item of list){const s=item.skin,card=document.createElement('article');card.className='skin-card';card.style.setProperty('--finish',s.color);card.style.setProperty('--rarity',s.rarityColor||s.color);const rarity=document.createElement('small');rarity.textContent=s.rarity.toUpperCase();const h=document.createElement('h3');h.textContent=s.label;const actions=document.createElement('div');actions.className='skin-actions';const equipped=state.equipped[s.weapon]===item.id;const eq=button(equipped?'Equipped · Restore original':'Equip',()=>transact(equipped?'unequip':'equip',equipped?{weapon:s.weapon}:{item:item.id}),equipped?'equipped':'');const sell=button('Sell · '+s.sell,()=>{pendingSell=item;$('sell-description').textContent=s.label+' → '+s.sell+' points';$('sell-dialog').showModal();});eq.disabled=sell.disabled=busy;actions.append(eq,sell);card.append(art(s),rarity,h,actions);$('inventory-list').append(card);}
  if(!list.length){const p=document.createElement('p');p.className='shop-note';p.textContent='No finishes here yet. Play a few rounds, then open your first crate.';$('inventory-list').append(p);}
  $('history-list').replaceChildren();for(const e of state?.history||[]){const row=document.createElement('div');row.className='history-row';const text=document.createElement('span');text.textContent=e.label;const time=document.createElement('small');time.textContent=new Date(e.at).toLocaleString();text.append(time);const amount=document.createElement('strong');amount.textContent=(e.amount>0?'+':'')+e.amount+' points';row.append(text,amount);$('history-list').append(row);}
 }

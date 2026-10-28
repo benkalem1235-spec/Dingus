@@ -17,11 +17,12 @@ The shop calls the existing cosmetic credit balance **points**; stored balances 
 
 | Crate | Points | Eligible weapons/finishes | Common / Rare / Epic / Legendary |
 |---|---:|---|---|
-| Field | 500 | All four weapons, Copper and Tidal | 65 / 35 / 0 / 0% |
+| Field | 500 | Guns only, Copper and Tidal | 65 / 35 / 0 / 0% |
 | Rifle | 600 | AK-47 and M4A1, every finish | 25 / 50 / 20 / 5% |
-| Close Quarters | 600 | Desert Eagle and knife, every finish | 25 / 50 / 20 / 5% |
+| Close Quarters | 600 | Desert Eagle finishes; knives only in Legendary | 25 / 50 / 20 / 5% |
 | Epic | 750 | All weapons, Rare or better | 0 / 35 / 55 / 10% |
-| Aurum | 1,000 | All weapons, Epic or Legendary | 0 / 0 / 80 / 20% |
+| Aurum | 1,000 | Guns and knives, Epic or Legendary | 0 / 0 / 80 / 20% |
+| Legendary | 500 | Epic guns and Legendary guns/knives | 0 / 0 / 20 / 80% |
 
 Epic retains the internal `elite` ID for compatibility. Each eligible skin is equally likely within its rarity. The catalog explicitly lists the skin pool for each crate, and the server draws only from that pool. Contents previews show every eligible skin with its exact per-item chance. All 16 existing model IDs remain unchanged, and no new private model pack is required.
 
@@ -45,3 +46,6 @@ Automated auth/economy/recorder checks cover ownership, insufficient funds, retr
 
 
 Crate refresh verification: catalog and economy checks cover the 500/750 point prices, normalized drop probabilities, restricted weapon pools, rarity boundaries, higher-tier resale balance, and reel alignment. A local Chromium fixture verified desktop/mobile previews, server-awarded reveals, skip and reduced motion, equip, insufficient points, and a deliberately lost response that retries without charging twice. Private weapon thumbnails were substituted in this UI fixture; final visual matching uses the host’s installed assets.
+
+
+All four existing knife finishes now have Legendary rarity, independent of their preserved model variant IDs. This also reclassifies owned knife copies without changing equipment or model compatibility. Glove item types are restricted to Legendary by the same catalog rule, but gloves are not implemented or awarded. The 500-point Legendary crate is an intentionally generous crate requested by the owner; existing Aurum and other crate prices are unchanged.

@@ -34,3 +34,5 @@
 
 .opening-dialog>.eyebrow{text-align:center;padding:0 20px}
 @media(min-width:651px) and (max-width:1050px){.crate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.skin-card{border-top-color:var(--rarity,var(--finish))}.skin-card small,.reel-card small{color:var(--rarity,var(--finish))}.reel-card{border-bottom-color:var(--rarity,var(--finish))}
