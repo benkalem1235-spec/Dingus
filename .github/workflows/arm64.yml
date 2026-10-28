@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
   push:
     paths: ['server/**', 'web/**', '.github/workflows/arm64.yml']
+concurrency:
+  group: arm64-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -13,6 +16,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build native server and plugins
         run: docker build -f server/Dockerfile.arm64 -t dingus-engine:arm64 server
+      - name: Fetch pinned browser runtime
+        run: python3 scripts/prepare-browser.py
       - name: Build native web transport
         run: docker build -t dingus-web:arm64 web
       - name: Test native WebRTC module and application checks

@@ -1,0 +1,9 @@
+# Combine with compose.yaml on an ARM64 host.
+services:
+  web:
+    platform: linux/arm64
+  engine:
+    platform: linux/arm64
+    build:
+      context: ../server
+      dockerfile: Dockerfile.arm64

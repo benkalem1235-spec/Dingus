@@ -6,7 +6,7 @@ ARG CS_REV=a238ef131803ed7592c4ba701499027c862889ee
 ARG METAMOD_REV=6bfb29405219f1325134a5e44feffb9580ff3b5f
 WORKDIR /build
 RUN git init cs && cd cs && git remote add origin https://github.com/FWGS/cs16-client.git && git fetch --depth 1 origin "$CS_REV" && git checkout FETCH_HEAD && git submodule update --init --recursive --depth 1 3rdparty/ReGameDLL_CS 3rdparty/yapb 3rdparty/miniutl
-RUN git init meta && cd meta && git remote add origin https://github.com/FWGS/metamod-fwgs.git && git fetch --depth 1 origin "$METAMOD_REV" && git checkout FETCH_HEAD
+RUN git init meta && cd meta && git remote add origin https://github.com/FWGS/metamod-fwgs.git && git fetch --depth 1 origin "$METAMOD_REV" && git checkout FETCH_HEAD && git submodule update --init --recursive --depth 1
 # These upstream flags are x86-only; the rest of both projects supports ARM64.
 RUN sed -i 's/-fcf-protection=none//g' cs/3rdparty/ReGameDLL_CS/regamedll/CMakeLists.txt meta/metamod/CMakeLists.txt
 RUN cmake -S cs -B cs-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_CLIENT=OFF -DBUILD_MAINUI=OFF -DBUILD_SERVER=ON -DYAPB_WITH_TLS=OFF -DYAPB_WITH_AMXX=OFF && cmake --build cs-build --parallel 2 && cmake --install cs-build --prefix /bundle
