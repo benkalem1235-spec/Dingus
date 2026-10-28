@@ -9,6 +9,15 @@ ARENAS={
  'arena_officecomplex':dict(source='c1a2',name='Office Complex Sector',mins=(1216,-1216,-608),maxs=(3136,-352,-400),campaign=True),
  'arena_crossfire':dict(source='crossfire',name='Crossfire',crop=False,mins=(-1100,-50,-1880),maxs=(1080,1740,-1260)),
  'arena_stalkyard':dict(source='stalkyard',name='Stalkyard',crop=False,mins=(-900,0,-48),maxs=(1080,1450,368)),
+ 'arena_bootcamp':dict(source='boot_camp',name='Boot Camp · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_bounce':dict(source='bounce',name='Bounce · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_datacore':dict(source='datacore',name='Data Core · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_frenzy':dict(source='frenzy',name='Frenzy · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_lambda':dict(source='lambda_bunker',name='Lambda Bunker · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_rapidcore':dict(source='rapidcore',name='Rapid Core · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_snarkpit':dict(source='snark_pit',name='Snark Pit · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_subtransit':dict(source='subtransit',name='Subtransit · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
+ 'arena_undertow':dict(source='undertow',name='Undertow · Half-Life arena',crop=False,mins=(0,0,0),maxs=(0,0,0)),
 }
 def entities(text):return [dict(re.findall(r'"([^"\n]+)"\s*"([^"\n]*)"',e)) for e in re.findall(r'\{([^}]+)\}',text)]
 def campaign_spawns(lumps,spec):

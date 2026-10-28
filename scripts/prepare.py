@@ -30,6 +30,8 @@ with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
  for f in (ROOT/'custom/cstrike').rglob('*'):
   if f.is_file() and f.suffix in allowed:z.write(f,'cstrike/'+f.relative_to(ROOT/'custom/cstrike').as_posix());count+=1
 (ROOT/'data/assets.json').write_text(json.dumps({'version':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),'size':archive.stat().st_size,'files':count}))
+# Add map overviews and regenerate the private Half-Life arena archive.
+subprocess.run([sys.executable,str(ROOT/'scripts/add-owned-maps.py'),str(source)],check=True)
 (ROOT/'data/source.json').write_text(json.dumps({'installation':str(source)}))
 cfg=ROOT/'config/server.cfg'
 if not cfg.exists():cfg.write_text((ROOT/'config/server.cfg.example').read_text().replace('GENERATE_ON_SETUP',secrets.token_hex(24)))

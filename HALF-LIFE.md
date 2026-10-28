@@ -1,6 +1,6 @@
 # Half-Life map adaptations
 
-Enabled alongside the eight CS maps, in both public and invite rooms:
+Enabled alongside the 25 classic CS maps, in both public and invite rooms:
 
 - **Crossfire**: the full original multiplayer layout. No added collision borders. All 18 original spawns become 9 CT / 9 T spawns. Seven Half-Life shotgun/SMG pickup piles.
 - **Stalkyard**: the full original multiplayer layout. No added collision borders. All 21 original spawns become 10 CT / 11 T spawns. Seven pickup piles.
@@ -15,3 +15,6 @@ The Office Complex crop is a collision boundary, not a visible new wall. Surroun
 The setup script generates these BSPs and preview images from your owned installation. They are deliberately excluded from GitHub. Original Steam files are never modified.
 
 Validation: all three public servers loaded; server traces reported zero blocked team spawns; all three maps started in invite rooms. In-browser Office Complex playtest confirmed the CS Urban player model, movement, MP5 pickup, dropping it, and M3 pickup. Native and browser builds passed. The cloud deployment recipe has not been deployed to a paid cloud server.
+
+
+Additional full-layout Half-Life multiplayer maps, all with no added borders: Boot Camp, Bounce, Data Core, Frenzy, Lambda Bunker, Rapid Core, Snark Pit, Subtransit and Undertow. These are converted from the owner's local Steam installation, keep their original playable geometry and spawn points, and use CS team-elimination rules.

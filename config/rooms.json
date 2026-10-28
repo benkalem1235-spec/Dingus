@@ -127,5 +127,239 @@
     "private": false,
     "token": "officecomplex",
     "mode": "team_elimination"
+  },
+  {
+    "id": "arena_bootcamp",
+    "nombre": "Boot Camp \u00b7 Half-Life arena",
+    "mapa": "arena_bootcamp",
+    "puerto": 27155,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_bootcamp",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_bounce",
+    "nombre": "Bounce \u00b7 Half-Life arena",
+    "mapa": "arena_bounce",
+    "puerto": 27165,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_bounce",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_datacore",
+    "nombre": "Data Core \u00b7 Half-Life arena",
+    "mapa": "arena_datacore",
+    "puerto": 27175,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_datacore",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_frenzy",
+    "nombre": "Frenzy \u00b7 Half-Life arena",
+    "mapa": "arena_frenzy",
+    "puerto": 27185,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_frenzy",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_lambda",
+    "nombre": "Lambda Bunker \u00b7 Half-Life arena",
+    "mapa": "arena_lambda",
+    "puerto": 27195,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_lambda",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_rapidcore",
+    "nombre": "Rapid Core \u00b7 Half-Life arena",
+    "mapa": "arena_rapidcore",
+    "puerto": 27205,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_rapidcore",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_snarkpit",
+    "nombre": "Snark Pit \u00b7 Half-Life arena",
+    "mapa": "arena_snarkpit",
+    "puerto": 27215,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_snarkpit",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_subtransit",
+    "nombre": "Subtransit \u00b7 Half-Life arena",
+    "mapa": "arena_subtransit",
+    "puerto": 27225,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_subtransit",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "arena_undertow",
+    "nombre": "Undertow \u00b7 Half-Life arena",
+    "mapa": "arena_undertow",
+    "puerto": 27235,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "arena_undertow",
+    "mode": "team_elimination"
+  },
+  {
+    "id": "de_dust",
+    "nombre": "Dust \u00b7 Classic",
+    "mapa": "de_dust",
+    "puerto": 27245,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_dust"
+  },
+  {
+    "id": "de_cbble",
+    "nombre": "Cobblestone \u00b7 Classic",
+    "mapa": "de_cbble",
+    "puerto": 27255,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_cbble"
+  },
+  {
+    "id": "de_chateau",
+    "nombre": "Chateau \u00b7 Classic",
+    "mapa": "de_chateau",
+    "puerto": 27265,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_chateau"
+  },
+  {
+    "id": "de_prodigy",
+    "nombre": "Prodigy \u00b7 Classic",
+    "mapa": "de_prodigy",
+    "puerto": 27275,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_prodigy"
+  },
+  {
+    "id": "de_piranesi",
+    "nombre": "Piranesi \u00b7 Classic",
+    "mapa": "de_piranesi",
+    "puerto": 27285,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_piranesi"
+  },
+  {
+    "id": "de_airstrip",
+    "nombre": "Airstrip \u00b7 Classic",
+    "mapa": "de_airstrip",
+    "puerto": 27295,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_airstrip"
+  },
+  {
+    "id": "de_storm",
+    "nombre": "Storm \u00b7 Classic",
+    "mapa": "de_storm",
+    "puerto": 27305,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_storm"
+  },
+  {
+    "id": "de_survivor",
+    "nombre": "Survivor \u00b7 Classic",
+    "mapa": "de_survivor",
+    "puerto": 27315,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_survivor"
+  },
+  {
+    "id": "de_torn",
+    "nombre": "Torn \u00b7 Classic",
+    "mapa": "de_torn",
+    "puerto": 27325,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_torn"
+  },
+  {
+    "id": "de_vertigo",
+    "nombre": "Vertigo \u00b7 Classic",
+    "mapa": "de_vertigo",
+    "puerto": 27335,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "de_vertigo"
+  },
+  {
+    "id": "cs_747",
+    "nombre": "747 \u00b7 Classic",
+    "mapa": "cs_747",
+    "puerto": 27345,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "cs_747"
+  },
+  {
+    "id": "cs_backalley",
+    "nombre": "Back Alley \u00b7 Classic",
+    "mapa": "cs_backalley",
+    "puerto": 27355,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "cs_backalley"
+  },
+  {
+    "id": "cs_estate",
+    "nombre": "Estate \u00b7 Classic",
+    "mapa": "cs_estate",
+    "puerto": 27365,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "cs_estate"
+  },
+  {
+    "id": "cs_havana",
+    "nombre": "Havana \u00b7 Classic",
+    "mapa": "cs_havana",
+    "puerto": 27375,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "cs_havana"
+  },
+  {
+    "id": "cs_militia",
+    "nombre": "Militia \u00b7 Classic",
+    "mapa": "cs_militia",
+    "puerto": 27385,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "cs_militia"
+  },
+  {
+    "id": "cs_siege",
+    "nombre": "Siege \u00b7 Classic",
+    "mapa": "cs_siege",
+    "puerto": 27395,
+    "maxJugadores": 12,
+    "private": false,
+    "token": "cs_siege"
   }
 ]
