@@ -15,7 +15,7 @@ window.addEventListener('beforeunload',()=>{try{window.xash?.disconnectTransport
 
 setupBuy();setupMouseCapture();
 
-const eventButton=document.createElement('button');eventButton.id='event-vote';eventButton.textContent='Vote: headcrab wave';document.getElementById('room-tools').prepend(eventButton);
+const eventButton=document.createElement('button');eventButton.id='event-vote';eventButton.textContent='Vote: headcrab wave';if(window.cs16HeadcrabsEnabled)document.getElementById('room-tools').prepend(eventButton);
 eventButton.onclick=async()=>{
  eventButton.disabled=true;
  try{const r=await fetch('/api/event?sala='+encodeURIComponent(window.cs16Sala)+'&event=headcrabs',{method:'POST',headers:{'X-Game-Session':window.xash?.session||''}});const d=await r.json();const toast=document.getElementById('toast');toast.textContent=d.message||d.error;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),7000);}

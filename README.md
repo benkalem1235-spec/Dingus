@@ -70,3 +70,7 @@ Game connections detect stalled packet streams and overloaded send queues instea
 
 
 Optional Butterfly knife, glove finishes and enhanced first-person weapon models are supported through the pinned private CSGOMod importer. See [MODPACK.md](MODPACK.md). The Armory player market lets players set prices and trade skins for points; the game no longer buys skins back.
+
+## Room startup and Half-Life events
+
+Opening a sleeping room now shows a live startup screen while the map and bot navigation data load. The room catalogue supports the full configured map list. Headcrab waves occur at random intervals of roughly 5–11 minutes while players are active on Half-Life arenas; classic Counter-Strike maps do not spawn them. The optional event-vote control appears only on Half-Life arenas.

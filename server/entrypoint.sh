@@ -35,7 +35,7 @@ listar_salas() {
     [ "${#id}" -le 16 ] || continue
     case "$vistos" in *" $id "*) continue ;; esac
     vistos="$vistos$id "
-    [ "$n" -lt 16 ] || break
+    [ "$n" -lt 64 ] || break
     nombre=$(recortar "$(printf '%s' "${nombre:-}" | tr -d '"\\;' | cut -c1-60)")
     [ -n "$nombre" ] || nombre="Sala $id"
     mapa=$(recortar "${mapa:-}")

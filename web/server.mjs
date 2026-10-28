@@ -21,10 +21,11 @@ const maximumHumans=Number(process.env.DINGUS_MAX_HUMANS)||8;
 const httpPort=Number(process.env.PORT)||27016;
 if(onDemand)fs.mkdirSync(control,{recursive:true});
 const rooms=JSON.parse(fs.readFileSync('/config/rooms.json'));
+const halfLifeMaps=new Set(["arena_crossfire", "arena_stalkyard", "arena_officecomplex", "arena_bootcamp", "arena_bounce", "arena_datacore", "arena_frenzy", "arena_lambda", "arena_rapidcore", "arena_snarkpit", "arena_subtransit", "arena_undertow"]);
 if(onDemand)for(const r of rooms)fs.rmSync(path.join(control,r.id+'.run'),{force:true});
 const adminPassword=fs.readFileSync('/config/server.cfg','utf8').match(/rcon_password "([^"]+)"/)?.[1];
 const assets=JSON.parse(fs.readFileSync('/data/assets.json'));
-const states=new Map(),lastHealthy=new Map();
+const states=new Map(),lastHealthy=new Map(),startupErrors=new Map(),headcrabTimers=new Map();
 function shareOrigin(req){
  const forwarded=req.headers['x-forwarded-proto'];
  // Public visitors keep the HTTPS origin that served them; local visitors get the LAN invite.
@@ -47,10 +48,26 @@ const leases=new RoomLifecycle({maximum:maximumRooms,count,start:requestRoom,tou
 const startingRooms=new Map();
 async function startRoom(r){
  if(!onDemand)return;
+ if(states.has(r.id))return;
  if(startingRooms.has(r.id))return startingRooms.get(r.id);
- leases.acquire(r);
- const pending=(async()=>{for(let n=0;n<60;n++){const info=await consultarInfo(r.puerto,500);if(info?.map===r.mapa){states.set(r.id,info);lastHealthy.set(r.id,Date.now());return;}await new Promise(ok=>setTimeout(ok,500));}leases.release(r.id);throw Error('This room could not start. Try again shortly.');})();
- startingRooms.set(r.id,pending);try{await pending;}finally{startingRooms.delete(r.id);}
+ startupErrors.delete(r.id);
+ const pending=(async()=>{
+  try{
+   leases.acquire(r);
+   for(let n=0;n<180;n++){
+    const info=await consultarInfo(r.puerto,700);
+    if(info?.map===r.mapa){states.set(r.id,info);lastHealthy.set(r.id,Date.now());return;}
+    await new Promise(ok=>setTimeout(ok,500));
+   }
+   throw Error('The server did not answer in time. Please retry.');
+  }catch(e){
+   if(leases.active.has(r.id))leases.release(r.id);
+   startupErrors.set(r.id,e.message||'The room could not start. Please retry.');
+   throw e;
+  }
+ })();
+ startingRooms.set(r.id,pending);
+ try{return await pending;}finally{startingRooms.delete(r.id);}
 }
 if(onDemand)setInterval(()=>leases.tick(),10000).unref();
 let updating=false;
@@ -106,6 +123,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return json(res,403,{error:'Origin rejected'});
   const r=lookup(u.searchParams.get('sala')),session=req.headers['x-game-session'];
   if(!r||u.searchParams.get('event')!=='headcrabs')return json(res,400,{error:'Unknown event or room.'});
+  if(!halfLifeMaps.has(r.mapa))return json(res,403,{error:'Headcrab events only happen in Half-Life arenas.'});
   const peers=[...sockets.peers].filter(p=>p.open&&p.room===r.id);
   if(!session||!peers.some(p=>p.session===session))return json(res,403,{error:'Join this room before voting for an event.'});
   const now=Date.now(),until=eventCooldowns.get(r.id)||0;
@@ -148,7 +166,7 @@ const server=http.createServer(async(req,res)=>{
  }
  if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'Method not allowed'});
  if(p==='/api/rooms')return json(res,200,{shareOrigin:shareOrigin(req),onDemand,roomLimit:onDemand?maximumRooms:null,activeRooms:onDemand?leases.active.size:rooms.filter(r=>states.get(r.id)).length,maps:rooms.filter(r=>!r.private).map(r=>({id:r.mapa,name:r.nombre.split(' · ')[0]})),rooms:rooms.filter(r=>!r.private).map(detail)});
- if(p==='/api/room'){const r=lookup(u.searchParams.get('room'));return r?json(res,200,detail(r)):json(res,404,{error:'Room link is invalid or expired.'});}
+ if(p==='/api/room'){const r=lookup(u.searchParams.get('room'));return r?json(res,200,{...detail(r),startupError:startupErrors.get(r.id)||null}):json(res,404,{error:'Room link is invalid or expired.'});}
  if(p==='/api/status'){
   const r=lookup(u.searchParams.get('sala'));if(!r)return json(res,404,{error:'Invalid room'});
   return json(res,200,{hostname:r.nombre,map:states.get(r.id)?.map||r.mapa,maxPlayers:r.maxJugadores,webPlayers:count(r.id),needsPassword:false,serverOnline:!!states.get(r.id),assets,cosmetics:cosmeticPack,sala:r.token});
@@ -157,8 +175,9 @@ const server=http.createServer(async(req,res)=>{
  if(p==='/game/valve.zip')return file(req,res,'/data/valve.zip');
  if(p==='/play'){
   const r=lookup(u.searchParams.get('room'));if(!r)return json(res,404,{error:'Room link is invalid or expired. Return to the lobby.'});
+  if(onDemand&&!states.has(r.id)){startRoom(r).catch(()=>{});const waiting=fs.readFileSync('/app/public/start-room.html','utf8');res.writeHead(200,{'Content-Type':mime['.html'],'Cache-Control':'no-store',...headers});return res.end(req.method==='HEAD'?undefined:waiting);}
   try{await startRoom(r);}catch(e){return json(res,503,{error:e.message});}
-  let html=fs.readFileSync('/app/public/index.html','utf8');html=html.replace('<head>','<head><script>window.cs16Sala='+JSON.stringify(r.token)+';window.CS16_SHARE_ORIGIN='+JSON.stringify(shareOrigin(req))+';</script>');
+  let html=fs.readFileSync('/app/public/index.html','utf8');html=html.replace('<head>','<head><script>window.cs16Sala='+JSON.stringify(r.token)+';window.cs16HeadcrabsEnabled='+JSON.stringify(halfLifeMaps.has(r.mapa))+';window.CS16_SHARE_ORIGIN='+JSON.stringify(shareOrigin(req))+';</script>');
   res.writeHead(200,{'Content-Type':mime['.html'],'Cache-Control':'no-store',...headers});return res.end(req.method==='HEAD'?undefined:html);
  }
  const root='/app/public',f=path.resolve(root,p==='/'?'lobby.html':'.'+p);
