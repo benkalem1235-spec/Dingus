@@ -100,7 +100,9 @@ preparar_sala() { # preparar_sala <dir> <nombre> <bots> <dificultad>
   ln -sf /opt/xash/addons/metamod/metamod.so "$dir/cstrike/addons/metamod/metamod.so"
   ln -sf /opt/xash/addons/events/dingus_events.so "$dir/cstrike/addons/events/dingus_events.so"
   printf 'gamedll dlls/cs.so\ndebuglevel 0\n' > "$dir/cstrike/addons/metamod/config.ini"
-  printf 'linux dlls/yapb.so\nlinux addons/events/dingus_events.so\n' > "$dir/cstrike/addons/metamod/plugins.ini"
+  mkdir -p "$dir/cstrike/addons/yapb/bin"
+  cp /opt/xash/cstrike/dlls/yapb.so "$dir/cstrike/addons/yapb/bin/yapb.so"
+  printf 'linux addons/yapb/bin/yapb.so\nlinux addons/events/dingus_events.so\n' > "$dir/cstrike/addons/metamod/plugins.ini"
   for f in /opt/xash/*; do                # motor y bibliotecas (enlaces)
     if [ -f "$f" ]; then ln -sf "$f" "$dir/"; fi
   done

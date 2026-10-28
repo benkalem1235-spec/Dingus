@@ -1,8 +1,10 @@
 # Combine with compose.yaml on an ARM64 host.
 services:
   web:
+    image: dingus-web:arm64
     platform: linux/arm64
   engine:
+    image: dingus-engine:arm64
     platform: linux/arm64
     build:
       context: ../server
