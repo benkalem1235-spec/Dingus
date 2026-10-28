@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p artifacts
           docker save dingus-engine:arm64 dingus-web:arm64 | gzip > artifacts/dingus-arm64-images.tar.gz
-          sha256sum artifacts/dingus-arm64-images.tar.gz > artifacts/SHA256SUMS
+          (cd artifacts && sha256sum dingus-arm64-images.tar.gz > SHA256SUMS)
       - uses: actions/upload-artifact@v4
         with:
           name: dingus-arm64
